@@ -1,5 +1,5 @@
 from processing.gui.wrappers import WidgetWrapper
-from qgis._core import QgsProcessingParameterFile, QgsProcessingAlgorithm
+from qgis._core import QgsProcessingParameterFile, QgsProcessingAlgorithm, QgsProcessingRegistry
 from qgis._gui import QgsFileWidget
 
 
@@ -48,3 +48,14 @@ class MyWidgetWrapper(WidgetWrapper):
 
     def value(self):
         return self.widget.filePath()
+
+
+#class MyFileParameter(QgsProcessingParameterFile):
+#    pass
+
+#myType = MyFileParameter()
+#QgsProcessingRegistry.addParameterType(myType)
+
+#QgsProcessingGuiRegistry.addAlgorithmConfigurationWidgetFactory
+
+#start_modeller script von BJ?
