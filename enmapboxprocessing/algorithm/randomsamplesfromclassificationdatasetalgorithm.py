@@ -5,7 +5,7 @@ import numpy as np
 from enmapboxprocessing.enmapalgorithm import EnMAPProcessingAlgorithm, Group
 from enmapboxprocessing.typing import ClassifierDump
 from enmapboxprocessing.utils import Utils
-from qgis._core import (QgsProcessingContext, QgsProcessingFeedback, QgsProcessingException)
+from qgis.core import (QgsProcessingContext, QgsProcessingFeedback, QgsProcessingException)
 from typeguard import typechecked
 
 
@@ -27,7 +27,7 @@ class RandomSamplesFromClassificationDatasetAlgorithm(EnMAPProcessingAlgorithm):
 
     def helpParameters(self) -> List[Tuple[str, str]]:
         return [
-            (self._DATASET, f'Classification dataset pickle file with feature data X and target data y to draw from.'),
+            (self._DATASET, 'Classification dataset pickle file with feature data X and target data y to draw from.'),
             (self._N,
              'Number of samples to draw from each category. '
              'Set a single value N to draw N samples for each category. '

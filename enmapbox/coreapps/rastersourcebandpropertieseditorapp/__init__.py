@@ -1,9 +1,8 @@
-from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QMenu, QAction
-
-from rastersourcebandpropertieseditorapp.rastersourcebandpropertieseditordialog import RasterSourceBandPropertiesEditorDialog
-from bandstatisticsapp.bandstatisticsdialog import BandStatisticsDialog
 from enmapbox.gui.applications import EnMAPBoxApplication
+from qgis.PyQt.QtGui import QIcon
+from qgis.PyQt.QtWidgets import QMenu, QAction
+from rastersourcebandpropertieseditorapp.rastersourcebandpropertieseditordialog import \
+    RasterSourceBandPropertiesEditorDialog
 from typeguard import typechecked
 
 

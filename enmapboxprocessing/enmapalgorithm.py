@@ -6,29 +6,28 @@ from time import time
 from typing import Any, Dict, Iterable, Optional, List, Tuple, TextIO
 
 import numpy as np
-from PyQt5.QtGui import QIcon
 from osgeo import gdal
 
-from qgis._core import (QgsProcessingAlgorithm, QgsProcessingParameterRasterLayer, QgsProcessingParameterVectorLayer,
-                        QgsProcessingContext, QgsProcessingFeedback,
-                        QgsRasterLayer, QgsVectorLayer, QgsProcessingParameterNumber, QgsProcessingParameterDefinition,
-                        QgsProcessingParameterField, QgsProcessingParameterBoolean, QgsProcessingParameterEnum, Qgis,
-                        QgsProcessingParameterString, QgsProcessingParameterBand, QgsCategorizedSymbolRenderer,
-                        QgsPalettedRasterRenderer, QgsProcessingParameterMapLayer, QgsMapLayer,
-                        QgsProcessingParameterExtent, QgsCoordinateReferenceSystem, QgsRectangle,
-                        QgsProcessingParameterFileDestination, QgsProcessingParameterFile, QgsProcessingParameterRange,
-                        QgsProcessingParameterCrs, QgsProcessingParameterVectorDestination, QgsProcessing,
-                        QgsProcessingUtils, QgsProcessingParameterMultipleLayers, QgsProcessingException,
-                        QgsProcessingParameterFolderDestination, QgsProject)
-
 import processing
+from enmapboxprocessing.driver import Driver
 from enmapboxprocessing.glossary import injectGlossaryLinks
 from enmapboxprocessing.parameter.processingparameterrasterdestination import ProcessingParameterRasterDestination
-from enmapboxprocessing.driver import Driver
 from enmapboxprocessing.processingfeedback import ProcessingFeedback
 from enmapboxprocessing.typing import QgisDataType, CreationOptions, GdalResamplingAlgorithm, ClassifierDump, \
     TransformerDump, RegressorDump, ClustererDump
 from enmapboxprocessing.utils import Utils
+from qgis.PyQt.QtGui import QIcon
+from qgis.core import (QgsProcessingAlgorithm, QgsProcessingParameterRasterLayer, QgsProcessingParameterVectorLayer,
+                       QgsProcessingContext, QgsProcessingFeedback,
+                       QgsRasterLayer, QgsVectorLayer, QgsProcessingParameterNumber, QgsProcessingParameterDefinition,
+                       QgsProcessingParameterField, QgsProcessingParameterBoolean, QgsProcessingParameterEnum, Qgis,
+                       QgsProcessingParameterString, QgsProcessingParameterBand, QgsCategorizedSymbolRenderer,
+                       QgsPalettedRasterRenderer, QgsProcessingParameterMapLayer, QgsMapLayer,
+                       QgsProcessingParameterExtent, QgsCoordinateReferenceSystem, QgsRectangle,
+                       QgsProcessingParameterFileDestination, QgsProcessingParameterFile, QgsProcessingParameterRange,
+                       QgsProcessingParameterCrs, QgsProcessingParameterVectorDestination, QgsProcessing,
+                       QgsProcessingUtils, QgsProcessingParameterMultipleLayers, QgsProcessingException,
+                       QgsProcessingParameterFolderDestination, QgsProject)
 from typeguard import typechecked
 
 
@@ -48,6 +47,7 @@ class EnMAPProcessingAlgorithm(QgsProcessingAlgorithm):
     PickleFileExtension = 'pkl'
     PickleFileDestination = 'Destination pickle file.'
     JsonFileFilter = 'JSON (*.json)'
+    JsonFileExtension = 'json'
     JsonFileDestination = 'Destination JSON file.'
     RasterFileDestination = 'Raster file destination.'
     VectorFileDestination = 'Vector file destination.'
@@ -231,7 +231,7 @@ class EnMAPProcessingAlgorithm(QgsProcessingAlgorithm):
         dump = Utils.pickleLoad(filename)
         try:
             dump = RegressorDump.fromDict(dump)
-        except:
+        except Exception:
             raise QgsProcessingException(
                 f'Wrong or missing parameter value: {self.parameterDefinition(name).description()}'
             )
@@ -380,6 +380,21 @@ class EnMAPProcessingAlgorithm(QgsProcessingAlgorithm):
 
     def parameterAsBoolean(self, parameters: Dict[str, Any], name: str, context: QgsProcessingContext) -> bool:
         return super().parameterAsBoolean(parameters, name, context)
+
+    def parameterAsObject(
+            self, parameters: Dict[str, Any], name: str, context: QgsProcessingContext
+    ) -> Optional[Any]:
+        string = self.parameterAsString(parameters, name, context)
+        if string is None:
+            return None
+        if string == '':
+            return None
+        try:
+            value = eval(string, {'nan': nan})
+        except Exception:
+            raise QgsProcessingException(f'Invalid value: {self.parameterDefinition(name).description()}')
+
+        return value
 
     def parameterAsFileOutput(
             self, parameters: Dict[str, Any], name: str, context: QgsProcessingContext

@@ -6,8 +6,8 @@ from enmapbox.qgispluginsupport.qps.speclib.core.spectrallibrary import FIELD_VA
 from enmapboxprocessing.enmapalgorithm import EnMAPProcessingAlgorithm, Group
 from enmapboxprocessing.typing import TransformerDump
 from enmapboxprocessing.utils import Utils
-from qgis._core import (QgsProcessingContext, QgsProcessingFeedback, QgsProcessingParameterField,
-                        QgsProcessingException)
+from qgis.core import (QgsProcessingContext, QgsProcessingFeedback, QgsProcessingParameterField,
+                       QgsProcessingException)
 from typeguard import typechecked
 
 

@@ -1,7 +1,7 @@
 from typing import Optional, Tuple
 
-from PyQt5.QtCore import QObject
-from PyQt5.QtWidgets import QMessageBox
+from qgis.PyQt.QtCore import QObject
+from qgis.PyQt.QtWidgets import QMessageBox
 
 from enmapboxprocessing.algorithm.createspectralindicesalgorithm import CreateSpectralIndicesAlgorithm
 from qgis.core import QgsRasterLayer
@@ -55,11 +55,11 @@ def importEarthEngine(showMessage=True, parent=None) -> Tuple[bool, object]:
     if isEarthEngineModuleInstalled():
         import ee
 
-        ### debugging
-        #import traceback
-        #traceback.print_stack()
-        #QMessageBox.information(parent, 'DEBUG', 'Just imported the "ee" module!')
-        ###
+        # ## debugging
+        # import traceback
+        # traceback.print_stack()
+        # QMessageBox.information(parent, 'DEBUG', 'Just imported the "ee" module!')
+        # ##
 
         return True, ee
     else:

@@ -2,13 +2,13 @@ import unittest
 from os.path import dirname, join, exists
 from typing import Dict
 
-from qgis._core import QgsProcessingFeedback
-
-from processing.core.Processing import Processing
 from enmapbox.testing import start_app
 from enmapboxprocessing.enmapalgorithm import EnMAPProcessingAlgorithm
+from processing.core.Processing import Processing
+from qgis.core import QgsProcessingFeedback
 
 qgsApp = start_app()
+
 
 class ProcessingFeedback(QgsProcessingFeedback):
     def setProgress(self, progress):
@@ -16,8 +16,8 @@ class ProcessingFeedback(QgsProcessingFeedback):
         if progress == 100:
             print('\r', end='')
 
-class TestCase(unittest.TestCase):
 
+class TestCase(unittest.TestCase):
     openReport = True
 
     @staticmethod
@@ -26,7 +26,7 @@ class TestCase(unittest.TestCase):
         if isinstance(alg, EnMAPProcessingAlgorithm):
             alg.initAlgorithm(configuration=None)
             print(alg.__class__.__name__,
-                '({} -> {}), {}, {}'.format(alg.group(), alg.displayName(), alg.groupId(), alg.name()))
+                  '({} -> {}), {}, {}'.format(alg.group(), alg.displayName(), alg.groupId(), alg.name()))
             print('parameters = {}'.format(repr(parameters)))
         return Processing.runAlgorithm(alg, parameters=parameters, feedback=ProcessingFeedback())
 

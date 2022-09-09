@@ -5,7 +5,7 @@ import numpy as np
 from enmapboxprocessing.enmapalgorithm import EnMAPProcessingAlgorithm, Group
 from enmapboxprocessing.typing import TransformerDump
 from enmapboxprocessing.utils import Utils
-from qgis._core import (QgsProcessingContext, QgsProcessingFeedback, QgsFeature, QgsProcessingParameterField)
+from qgis.core import (QgsProcessingContext, QgsProcessingFeedback, QgsFeature, QgsProcessingParameterField)
 from typeguard import typechecked
 
 
@@ -25,7 +25,7 @@ class PrepareUnsupervisedDatasetFromVectorAndFieldsAlgorithm(EnMAPProcessingAlgo
 
     def helpParameters(self) -> List[Tuple[str, str]]:
         return [
-            (self._VECTOR, f'Vector layer specifying feature data X.'),
+            (self._VECTOR, 'Vector layer specifying feature data X.'),
             (self._FEATURE_FIELDS, 'Fields with values used as feature data X.'),
             (self._OUTPUT_DATASET, self.PickleFileDestination)
         ]

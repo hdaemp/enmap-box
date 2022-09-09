@@ -1,7 +1,8 @@
 from typing import NamedTuple
 
 import numpy as np
-from qgis._core import QgsRectangle
+
+from qgis.core import QgsRectangle
 
 
 class RasterBlockInfo(NamedTuple):
@@ -38,4 +39,3 @@ class RasterBlockInfo(NamedTuple):
         ).reshape(-1, 1)
         ymap = coordinates * ones
         return ymap
-

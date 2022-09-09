@@ -1,6 +1,5 @@
-from processing.gui.wrappers import WidgetWrapper
-from qgis._core import QgsProcessingParameterFile, QgsProcessingAlgorithm, QgsProcessingRegistry
-from qgis._gui import QgsFileWidget
+from qgis.core import QgsProcessingParameterFile, QgsProcessingAlgorithm
+from qgis.gui import QgsFileWidget
 
 
 class MyAlgorithm(QgsProcessingAlgorithm):
@@ -24,7 +23,6 @@ class MyAlgorithm(QgsProcessingAlgorithm):
         return type(self)()
 
     def initAlgorithm(self, configuration):
-
         # add a normal parameter
         self.addParameter(QgsProcessingParameterFile('file1', 'Normal File'))
 

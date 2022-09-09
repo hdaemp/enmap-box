@@ -33,11 +33,14 @@ from enmapbox.qgispluginsupport.qps.classification.classificationscheme import \
     ClassificationMapLayerComboBox, ClassInfo, ClassificationScheme, ClassificationSchemeComboBox, \
     ClassificationSchemeWidget
 from enmapbox.qgispluginsupport.qps.utils import loadUi
-from qgis.PyQt.QtCore import *
-from qgis.PyQt.QtGui import *
-from qgis.PyQt.QtWidgets import *
+from enmapboxprocessing.algorithm.reclassifyrasteralgorithm import ReclassifyRasterAlgorithm
+from qgis.PyQt.QtCore import QAbstractTableModel, Qt, QModelIndex, QSortFilterProxyModel
+from qgis.PyQt.QtGui import QColor, QContextMenuEvent, QIcon
+from qgis.PyQt.QtWidgets import QFileDialog, QTableView, QMenu, QStyledItemDelegate, QDialog, QDialogButtonBox, QAction
+from qgis.core import QgsProcessing
 from qgis.core import QgsProviderRegistry, QgsRasterLayer, QgsProject, QgsMapLayerProxyModel
-from qgis.gui import QgsFileWidget, QgsRasterFormatSaveOptionsWidget, QgsMapLayerComboBox
+from qgis.gui import QgsMapLayerComboBox
+from typeguard import typechecked
 from . import APP_DIR
 
 SETTINGS_KEY = 'ENMAPBOX_RECLASSIFY_APP'
@@ -68,66 +71,20 @@ def setClassInfo(targetDataset, classificationScheme, bandIndex=0):
     band.SetColorTable(ct)
 
 
-def reclassify(pathSrc: str, pathDst: str, dstClassScheme: ClassificationScheme, labelLookup: dict,
-               drvDst=None,
-               bandIndices=0, tileSize=None, co=None):
-    """
-    Internal wrapper to reclassify raster images based on hub-flow API.
-    :param pathSrc: str, path of source image
-    :param pathDst: str, path of destination image
-    :param dstClassScheme: ClassificationScheme
-    :param labelLookup: dict() as lookup table
-    :param drvDst: gdal.Driver with driver of output image
-    :param bandIndices: - not used -
-    :param tileSize: - not used -
-    :param co: - not used -
-    :return: gdal.Dataset of written re-classified image
-    """
-    # assert os.path.isfile(pathSrc)
-    assert isinstance(dstClassScheme, ClassificationScheme)
-    assert isinstance(labelLookup, dict)
-
-    # hubflow requires to handle the `unclassified` class (label = 0, always first position) separately
-
-    MAP2HUBFLOW = dict()
-    for c in dstClassScheme:
-        MAP2HUBFLOW[c.label()] = c
-    if 0 not in MAP2HUBFLOW.keys():
-        MAP2HUBFLOW[0] = ClassInfo(label=0, name='Unclassified', color='black')
-
-    names = []
-    colors = []
-    labels = []
-    for l in sorted(list(MAP2HUBFLOW.keys())):
-        classInfo: ClassInfo = MAP2HUBFLOW[l]
-        names.append(classInfo.name())
-        colors.append(classInfo.color().name())
-        labels.append(l)
-
-    if len(names) == 0:
-        return
-
-    import _classic.hubflow.core
-    classification = _classic.hubflow.core.Classification(pathSrc)
-
-    newDef = _classic.hubflow.core.ClassDefinition(names=names[1:], colors=colors[1:], ids=labels[1:])
-    newDef.setNoDataNameAndColor(names[0], colors[0])
-
-    classification.reclassify(filename=pathDst,
-                              classDefinition=newDef,
-                              mapping=labelLookup.copy())
-    pathQml = os.path.splitext(pathDst)[0] + '.qml'
-    loptions = QgsRasterLayer.LayerOptions(loadDefaultStyle=False)
-    lyr = QgsRasterLayer(pathDst, options=loptions)
-    renderer = dstClassScheme.rasterRenderer()
-    renderer.setInput(lyr.dataProvider())
-    lyr.setRenderer(renderer)
-    lyr.saveNamedStyle(pathQml)
-    ds = gdal.Open(pathDst)
-    if isinstance(ds, gdal.Dataset):
-        ds.GetFileList()  # resolve issue 410 (or similar)
-
-    return ds
+@typechecked
+def reclassify(layerSrc: QgsRasterLayer, dstClassScheme: ClassificationScheme, labelLookup: dict):
+    mapping = str(labelLookup)
+    categories = str([(c.label(), c.name(), c.color().name()) for c in dstClassScheme])
+    alg = ReclassifyRasterAlgorithm()
+    parameters = {
+        alg.P_RASTER: layerSrc,
+        alg.P_MAPPING: mapping,
+        alg.P_CATEGORIES: categories,
+        alg.P_OUTPUT_CLASSIFICATION: QgsProcessing.TEMPORARY_OUTPUT
+    }
+    from enmapbox import EnMAPBox
+    enmapBox = EnMAPBox.instance()
+    enmapBox.showProcessingAlgorithmDialog(alg, parameters, True)
 
 
 class ReclassifyTableModel(QAbstractTableModel):
@@ -185,16 +142,16 @@ class ReclassifyTableModel(QAbstractTableModel):
         assert isinstance(path, pathlib.Path) and path.is_file()
 
         allowedSrcNames = self.mSrc.classNames()
-        allowedSrcLabels = [str(l) for l in self.mSrc.classLabels()]
+        allowedSrcLabels = [str(label) for label in self.mSrc.classLabels()]
 
         allowedDstNames = self.mDst.classNames()
-        allowedDstLabels = [str(l) for l in self.mDst.classLabels()]
+        allowedDstLabels = [str(label) for label in self.mDst.classLabels()]
 
         if reset:
             self.resetMapping()
 
         with open(path, 'r', encoding='utf-8') as f:
-            lines = [l.strip() for l in f.readlines()]
+            lines = [line.strip() for line in f.readlines()]
             rx = re.compile(r'^(?P<src>[^#;]+);(?P<dst>[^#;]+)$')
             rxInt = re.compile(r'^\d+$')
 
@@ -256,7 +213,7 @@ class ReclassifyTableModel(QAbstractTableModel):
             try:
                 self.mDst.sigClassesRemoved.disconnect(self.onDestinationClassesRemoved)
                 self.mDst.dataChanged.disconnect(self.onDestinationDataChanged)
-            except:
+            except Exception:
                 pass
 
         self.mDst = cs
@@ -285,7 +242,7 @@ class ReclassifyTableModel(QAbstractTableModel):
             try:
                 oldSrc.sigClassesRemoved.disconnect(self.onSourceClassesRemoved)
                 self.mSrc.dataChanged.disconnect(self.onSourceDataChanged)
-            except:
+            except Exception:
                 pass
         self.mSrc.sigClassesRemoved.connect(self.onSourceClassesRemoved)
         self.mSrc.dataChanged.connect(self.onSourceDataChanged)
@@ -377,7 +334,7 @@ class ReclassifyTableModel(QAbstractTableModel):
             if role == Qt.DisplayRole:
                 return self.classDisplayName(c)
             elif role == Qt.ToolTipRole:
-                return f'Source Class\n' + self.classToolTip(c)
+                return 'Source Class\n' + self.classToolTip(c)
             elif role == Qt.DecorationRole:
                 return c.icon()
 
@@ -388,7 +345,7 @@ class ReclassifyTableModel(QAbstractTableModel):
                 if role == Qt.DisplayRole:
                     return self.classDisplayName(dstClass)
                 elif role == Qt.ToolTipRole:
-                    return f'Destination Class\n' + self.classToolTip(dstClass)
+                    return 'Destination Class\n' + self.classToolTip(dstClass)
 
                 elif role == Qt.DecorationRole:
                     return dstClass.icon()
@@ -518,31 +475,12 @@ class ReclassifyDialog(QDialog):
         self.mapLayerComboBox.setShowCrs(False)
 
         # now define all the logic behind the UI which can not be defined in the QDesigner
-        assert isinstance(self.dstFileWidget, QgsFileWidget)
-        self.dstFileWidget.setStorageMode(QgsFileWidget.SaveFile)
-        self.dstFileWidget.setConfirmOverwrite(True)
-        dst_path = enmapboxSettings().value(KEY_DST_RASTER, None)
-        if isinstance(dst_path, str):
-            self.dstFileWidget.setFilePath(dst_path)
-
-        assert isinstance(self.widgetOutputOptions, QgsRasterFormatSaveOptionsWidget)
-        self.widgetOutputOptions.setType(QgsRasterFormatSaveOptionsWidget.Full)
-        self.widgetOutputOptions.setProvider('gdal')
-        self.widgetOutputOptions.setFormat('GTIFF')
-        self.widgetOutputOptions.setRasterFileName('reclassifified.tif')
-        self.gbOutputOptions.setVisible(False)  # hide, as long it is not connected
-        self.dstFileWidget.fileChanged.connect(self.widgetOutputOptions.setRasterFileName)
-        self.dstFileWidget.fileChanged.connect(self.onDestinationRasterChanged)
-        # self.dstClassificationSchemeWidget.classificationScheme().sigClassesAdded.connect(self.refreshTransformationTable)
-        # self.dstClassificationSchemeWidget.classificationScheme().sigClassesRemoved.connect(self.refreshTransformationTable)
-
         self.mDstClassSchemeInitialized = False
 
         self.mapLayerComboBox.layerChanged.connect(self.onSourceRasterChanged)
         self.mapLayerComboBox.currentIndexChanged.connect(self.validate)
 
         self.btnSelectSrcfile.setDefaultAction(self.actionAddRasterSource)
-        self.dstFileWidget.fileChanged.connect(self.validate)
 
         def onAddRaster(*args):
             filter = QgsProviderRegistry.instance().fileRasterFilters()
@@ -558,12 +496,6 @@ class ReclassifyDialog(QDialog):
         self.actionAddRasterSource.triggered.connect(onAddRaster)
         self.onSourceRasterChanged()
 
-    def onDestinationRasterChanged(self):
-
-        dst_path = self.dstFileWidget.filePath()
-        if isinstance(dst_path, str):
-            enmapboxSettings().setValue(KEY_DST_RASTER, dst_path)
-
     def onSourceRasterChanged(self):
         lyr = self.mapLayerComboBox.currentLayer()
         cs_final = ClassificationScheme()
@@ -577,15 +509,6 @@ class ReclassifyDialog(QDialog):
 
         self.mModel.setSource(cs_final)
         self.validate()
-
-    def setDstClassificationPath(self, path: str):
-        """
-        Sets the output path.
-        :param path:
-        :return:
-        """
-        assert isinstance(self.dstFileWidget, QgsFileWidget)
-        self.dstFileWidget.setFilePath(path)
 
     def setDstClassificationScheme(self, classScheme: ClassificationScheme):
         """
@@ -604,20 +527,6 @@ class ReclassifyDialog(QDialog):
         :return: ClassificationScheme
         """
         return self.dstClassificationSchemeWidget.classificationScheme()
-
-    def setDstRaster(self, path: str):
-        """
-        Sets the output path
-        :param path: str
-        """
-        self.dstFileWidget.setFilePath(path)
-
-    def dstRaster(self) -> str:
-        """
-        Returns the destination raster path
-        :return: str
-        """
-        return self.dstFileWidget.filePath()
 
     def srcRasterLayer(self) -> QgsRasterLayer:
         lyr = self.mapLayerComboBox.currentLayer()
@@ -677,7 +586,6 @@ class ReclassifyDialog(QDialog):
         isOk = True
         isOk &= isinstance(self.mapLayerComboBox.currentLayer(), QgsRasterLayer)
         isOk &= len(self.dstClassificationSchemeWidget.classificationScheme()) > 0
-        isOk &= len(self.dstFileWidget.filePath()) > 0
         isOk &= self.mModel.rowCount() > 0
 
         btnAccept = self.buttonBox.button(QDialogButtonBox.Ok)
@@ -689,8 +597,7 @@ class ReclassifyDialog(QDialog):
         :return: dict with {pathSrc:str, pathDst:str, labelLookup:dict, dstClassScheme:ClassificationScheme
         """
         summary = self.mModel.summary()
-        summary['pathSrc'] = self.srcRasterLayer().source()
-        summary['pathDst'] = self.dstRaster()
+        summary['pathSrc'] = self.srcRasterLayer()
         return summary
 
 
@@ -728,15 +635,11 @@ class ReclassifyTool(EnMAPBoxApplication):
         self.m_dialogs.append(uiDialog)
 
     def runReclassification(self, **settings):
-        # return {'pathSrc': pathSrc, 'pathDst': pathDst, 'LUT': LUT,
-        #        'classNames': dstScheme.classNames(), 'classColors': dstScheme.classColors()}
 
         d = self.sender()
         if len(settings) > 0:
-            from reclassifyapp import reclassify
-            reclassify.reclassify(settings['pathSrc'],
-                                  settings['pathDst'],
-                                  settings['dstClassScheme'],
-                                  settings['labelLookup'])
+            reclassify(settings['pathSrc'],
+                       settings['dstClassScheme'],
+                       settings['labelLookup'])
         if d in self.m_dialogs:
             self.m_dialogs.remove(d)

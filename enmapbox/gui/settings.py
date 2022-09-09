@@ -17,16 +17,20 @@
 ***************************************************************************
 """
 
-import os, pathlib, enum
+import enum
+import os
+
+from qgis.PyQt.QtCore import Qt, QSettings, QAbstractTableModel, QModelIndex
+from qgis.PyQt.QtWidgets import QStyledItemDelegate, QTableView, QColorDialog, QDialog, QAbstractItemView, \
+    QDialogButtonBox
+from qgis.PyQt.QtXml import QDomElement
 
 from enmapbox import enmapboxSettings
-from enmapbox.gui.utils import loadUi, enmapboxUiPath
+from enmapbox.gui.utils import enmapboxUiPath
+from enmapbox.qgispluginsupport.qps.pyqtgraph.pyqtgraph.examples.syntax import QColor
+from enmapbox.qgispluginsupport.qps.utils import loadUi
 from qgis.core import QgsSettings, QgsProject
 from qgis.gui import QgsColorButton
-from qgis.PyQt.QtGui import *
-from qgis.PyQt.QtCore import *
-from qgis.PyQt.QtWidgets import *
-from qgis.PyQt.QtXml import *
 
 
 class SettingsKey(enum.Enum):
@@ -79,13 +83,13 @@ class SettingsInfo(object):
         r = []
         return []
         # todo: read settings from QgsProject
-        for key in settings.childKeys():
-            key = str(key)
-            description = None
-            if key in GLOBAL_DEFAULT_SETTINGS.keys():
-                description = GLOBAL_DEFAULT_SETTINGS[key].mDescription
-            r.append(SettingsInfo(key, settings.value(key), description))
-        return r
+        # for key in settings.childKeys():
+        #    key = str(key)
+        #    description = None
+        #    if key in GLOBAL_DEFAULT_SETTINGS.keys():
+        #        description = GLOBAL_DEFAULT_SETTINGS[key].mDescription
+        #    r.append(SettingsInfo(key, settings.value(key), description))
+        # return r
 
     @staticmethod
     def readFromQSettings(settings):

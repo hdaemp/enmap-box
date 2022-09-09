@@ -1,14 +1,12 @@
 from os.path import basename, join, dirname
 
-from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QWidget, QToolButton, QMenu, QMessageBox
-from PyQt5.uic import loadUi
-
 from enmapbox import EnMAPBox
 from enmapboxprocessing.algorithm.prepareunsuperviseddatasetfromcodealgorithm import \
     PrepareUnsupervisedDatasetFromCodeAlgorithm
 from enmapboxprocessing.algorithm.prepareunsuperviseddatasetfromfilealgorithm import \
     PrepareUnsupervisedDatasetFromFileAlgorithm
+from enmapboxprocessing.algorithm.prepareunsuperviseddatasetfromjsonalgorithm import \
+    PrepareUnsupervisedDatasetFromJsonAlgorithm
 from enmapboxprocessing.algorithm.prepareunsuperviseddatasetfromlibraryalgorithm import \
     PrepareUnsupervisedDatasetFromLibraryAlgorithm
 from enmapboxprocessing.algorithm.prepareunsuperviseddatasetfromrasteralgorithm import \
@@ -19,7 +17,10 @@ from enmapboxprocessing.typing import TransformerDump
 from enmapboxprocessing.utils import Utils
 from processing import AlgorithmDialog
 from processing.gui.wrappers import WidgetWrapper
-from qgis._gui import QgsFileWidget
+from qgis.PyQt.QtGui import QIcon
+from qgis.PyQt.QtWidgets import QWidget, QToolButton, QMenu, QMessageBox
+from qgis.PyQt.uic import loadUi
+from qgis.gui import QgsFileWidget
 
 
 class ProcessingParameterPickleFileUnsupervisedDatasetWidget(QWidget):
@@ -48,6 +49,9 @@ class ProcessingParameterPickleFileUnsupervisedDatasetWidget(QWidget):
 
             (PrepareUnsupervisedDatasetFromFileAlgorithm(),
              QIcon(':/images/themes/default/mIconFile.svg')),
+
+            (PrepareUnsupervisedDatasetFromJsonAlgorithm(),
+             QIcon(':/images/themes/default/mIconFieldJson.svg'))
         ]:
             action = self.menu.addAction(alg.displayName())
             action.setIcon(icon)
@@ -63,7 +67,7 @@ class ProcessingParameterPickleFileUnsupervisedDatasetWidget(QWidget):
                 try:
                     dump = TransformerDump(**Utils.pickleLoad(filename))
                     samples, features = dump.X.shape
-                except:
+                except Exception:
                     continue
 
                 action = self.menu.addAction('')

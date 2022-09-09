@@ -8,7 +8,7 @@ from enmapboxprocessing.algorithm.prepareunsuperviseddatasetfromrasteralgorithm 
 from enmapboxprocessing.enmapalgorithm import EnMAPProcessingAlgorithm, Group
 from enmapboxprocessing.typing import TransformerDump
 from enmapboxprocessing.utils import Utils
-from qgis._core import QgsProcessingContext, QgsProcessingFeedback, QgsProcessingException
+from qgis.core import QgsProcessingContext, QgsProcessingFeedback, QgsProcessingException
 from typeguard import typechecked
 
 
@@ -76,7 +76,7 @@ class FitTransformerAlgorithmBase(EnMAPProcessingAlgorithm):
         # check code
         try:
             self.parameterAsTransformer(parameters, self.P_TRANSFORMER, context)
-        except:
+        except Exception:
             return False, traceback.format_exc()
         return True, ''
 

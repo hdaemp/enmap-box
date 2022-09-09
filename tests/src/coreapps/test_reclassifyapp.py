@@ -1,19 +1,26 @@
-import unittest
 import os
 import re
+import unittest
 
-from PyQt5.QtCore import QSortFilterProxyModel
-from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import QTableView
 from osgeo import gdal
-from qgis.core import QgsProject, QgsRasterLayer, QgsPalettedRasterRenderer
 
-import _classic
-from enmapbox import DIR_ENMAPBOX, initPythonPaths
-from enmapbox.testing import TestObjects, EnMAPBoxTestCase
+from _classic.hubflow.core import Classification, Color, ClassDefinition
+
+try:
+    from reclassifyapp.reclassify import ReclassifyTableView, ReclassifyTableModel, ReclassifyTableViewDelegate, \
+        ReclassifyDialog, reclassify
+except ModuleNotFoundError as ex:
+    if ex.name == 'reclassifyapp':
+        raise unittest.SkipTest('Failed to import reclassifyapp')
+    else:
+        raise ex
+from enmapbox import initPythonPaths
 from enmapbox.qgispluginsupport.qps.classification.classificationscheme import ClassificationScheme
-from reclassifyapp.reclassify import ReclassifyTableView, ReclassifyTableModel, ReclassifyTableViewDelegate, \
-    ReclassifyDialog, reclassify
+from enmapbox.testing import TestObjects, EnMAPBoxTestCase
+from qgis.PyQt.QtCore import QSortFilterProxyModel
+from qgis.PyQt.QtGui import QColor
+from qgis.PyQt.QtWidgets import QTableView
+from qgis.core import QgsProject, QgsRasterLayer, QgsPalettedRasterRenderer
 
 initPythonPaths()
 
@@ -55,7 +62,7 @@ class TestReclassify(EnMAPBoxTestCase):
 
             pathDst = tmpDir / 'testclasstiff{}.{}'.format(i, ext)
             pathDst = pathDst.as_posix()
-            classification = _classic.hubflow.core.Classification(pathSrc)
+            classification = Classification(pathSrc)
             oldDef = classification.classDefinition()
             self.assertEqual(oldDef.names(), classNamesOld[1:])
 
@@ -63,12 +70,12 @@ class TestReclassify(EnMAPBoxTestCase):
             newColors = [QColor('black'), QColor('yellow'), QColor('brown')]
 
             # this works
-            c = _classic.hubflow.core.Color(QColor('black'))
+            c = Color(QColor('black'))
 
-            # but this does'nt
+            # but this doesn't
             # newDef = _classic.hubflow.core.ClassDefinition(names=newNames[1:], colors=newColors[1:])
 
-            newDef = _classic.hubflow.core.ClassDefinition(names=newNames[1:], colors=[c.name() for c in newColors[1:]])
+            newDef = ClassDefinition(names=newNames[1:], colors=[c.name() for c in newColors[1:]])
             newDef.setNoDataNameAndColor(newNames[0], QColor('yellow'))
 
             # driver = guessRasterDriver(pathDst)

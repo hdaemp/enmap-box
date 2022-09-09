@@ -9,18 +9,18 @@
 """
 
 import os
+
 __author__ = 'benjamin.jakimow@geo.hu-berlin.de'
 __date__ = '2017-07-17'
 __copyright__ = 'Copyright 2017, Benjamin Jakimow'
 
 import unittest
 
-from PyQt5.QtWidgets import QWidget
+from qgis.PyQt.QtWidgets import QWidget
 
 from enmapbox import EnMAPBox, EnMAPBoxApplication
 
 from enmapbox.testing import EnMAPBoxTestCase
-
 
 
 class test_ensomap(EnMAPBoxTestCase):
@@ -28,7 +28,6 @@ class test_ensomap(EnMAPBoxTestCase):
     def test_imports(self):
         import ensomap
         self.assertTrue(os.path.isfile(ensomap.__file__))
-        from ensomap.enmapboxintegration import EnSoMAP
         import hys
 
         self.assertTrue(os.path.isfile(hys.__file__))
@@ -52,5 +51,4 @@ class test_ensomap(EnMAPBoxTestCase):
 
 
 if __name__ == "__main__":
-
     unittest.main(buffer=False)

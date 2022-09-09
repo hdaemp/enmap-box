@@ -1,11 +1,11 @@
 from osgeo import gdal
-from qgis._core import QgsProcessingException
 
 from enmapbox.exampledata import enmap
 from enmapboxprocessing.algorithm.writeenviheaderalgorithm import WriteEnviHeaderAlgorithm
 from enmapboxprocessing.rasterreader import RasterReader
 from enmapboxprocessing.rasterwriter import RasterWriter
 from enmapboxprocessing.test.algorithm.testcase import TestCase
+from qgis.core import QgsProcessingException
 
 
 class TestWriteEnviHeaderAlgorithm(TestCase):
@@ -22,7 +22,7 @@ class TestWriteEnviHeaderAlgorithm(TestCase):
 
         writer.setMetadata(reader.metadata())
         for i in range(ds1.RasterCount):
-            writer.setMetadata(reader.metadata(i+1), i+1)
+            writer.setMetadata(reader.metadata(i + 1), i + 1)
         del ds1, ds2, reader, writer
 
         alg = WriteEnviHeaderAlgorithm()

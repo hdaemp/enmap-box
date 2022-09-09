@@ -7,7 +7,7 @@ import numpy as np
 from enmapboxprocessing.enmapalgorithm import EnMAPProcessingAlgorithm, Group
 from enmapboxprocessing.typing import ClassifierDump, Category, checkSampleShape, RegressorDump, Target
 from enmapboxprocessing.utils import Utils
-from qgis._core import (QgsProcessingContext, QgsProcessingFeedback)
+from qgis.core import (QgsProcessingContext, QgsProcessingFeedback)
 from typeguard import typechecked
 
 
@@ -37,11 +37,11 @@ class PrepareRegressionDatasetFromSynthMixAlgorithm(EnMAPProcessingAlgorithm):
             (self._BACKGROUND, 'Proportion of background mixtures.'),
             (self._INCLUDE_ENDMEMBER, 'Whether to include the original library spectra into the dataset.'),
             (self._MIXING_PROBABILITIES, 'A list of probabilities for using 2, 3, 4, ... endmember mixing models. '
-                                       'Trailing 0 probabilities can be skipped. The default values of 0.5, 0.5,'
-                                       'results in 50% 2-endmember and 50% 3-endmember models.'),
+                                         'Trailing 0 probabilities can be skipped. The default values of 0.5, 0.5,'
+                                         'results in 50% 2-endmember and 50% 3-endmember models.'),
             (self._ALLOW_WITHINCLASS_MIXTURES, 'Whether to allow mixtures with profiles belonging to the same class.'),
             (self._CLASS_PROBABILITIES, 'A list of probabilities for drawing profiles from each class. '
-                                      'If not specified, class probabilities are proportional to the class size.'),
+                                        'If not specified, class probabilities are proportional to the class size.'),
             (self._OUTPUT_FOLDER, self.FolderDestination)
         ]
 
@@ -122,13 +122,13 @@ class PrepareRegressionDatasetFromSynthMixAlgorithm(EnMAPProcessingAlgorithm):
         fractions = list()
 
         classProbabilities2 = {k: v / (1 - classProbabilities[targetCategory.value])
-                             for k, v in classProbabilities.items()
-                             if k != targetCategory.value}
+                               for k, v in classProbabilities.items()
+                               if k != targetCategory.value}
         for i in range(self.n):
             complexity = np.random.choice(list(mixingComplexities.keys()), p=list(mixingComplexities.values()))
 
             isBackground = self.background >= randint(1, 100)
-            print(isBackground)
+
             if isBackground:
                 drawnLabels = list(
                     np.random.choice(
@@ -142,8 +142,9 @@ class PrepareRegressionDatasetFromSynthMixAlgorithm(EnMAPProcessingAlgorithm):
                 drawnLabels.extend(np.random.choice(list(classProbabilities.keys()), size=complexity - 1, replace=True,
                                                     p=list(classProbabilities.values())))
             else:
-                drawnLabels.extend(np.random.choice(list(classProbabilities2.keys()), size=complexity - 1, replace=False,
-                                                    p=list(classProbabilities2.values())))
+                drawnLabels.extend(
+                    np.random.choice(list(classProbabilities2.keys()), size=complexity - 1, replace=False,
+                                     p=list(classProbabilities2.values())))
 
             drawnIndices = [np.random.choice(indices[label]) for label in drawnLabels]
             drawnFeatures = features[:, drawnIndices]

@@ -4,7 +4,7 @@ from enmapboxprocessing.algorithm.fitgenericregressoralgorithm import FitGeneric
 from enmapboxprocessing.algorithm.predictregressionalgorithm import PredictRegressionAlgorithm
 from enmapboxprocessing.algorithm.regressorperformancealgorithm import RegressorPerformanceAlgorithm
 from enmapboxprocessing.enmapalgorithm import EnMAPProcessingAlgorithm, Group
-from qgis._core import (QgsProcessingContext, QgsProcessingFeedback)
+from qgis.core import (QgsProcessingContext, QgsProcessingFeedback)
 from typeguard import typechecked
 
 
@@ -30,7 +30,7 @@ class RegressionWorkflowAlgorithm(EnMAPProcessingAlgorithm):
 
     def helpParameters(self) -> List[Tuple[str, str]]:
         return [
-            (self._DATASET, f'Training dataset pickle file used for fitting the regressor.'),
+            (self._DATASET, 'Training dataset pickle file used for fitting the regressor.'),
             (self._REGRESSOR, 'Scikit-Learn Python code specifying a regressor.'),
             (self._RASTER, 'A raster layer with bands used as features for mapping. '
                            'Regressor features and raster bands are matched by name. '

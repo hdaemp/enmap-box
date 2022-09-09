@@ -6,7 +6,7 @@ import json
 
 from enmapbox.gui.mapcanvas import MapCanvas
 from enmapbox.utils import importEarthEngine
-from qgis._gui import QgsMapCanvas
+from qgis.gui import QgsMapCanvas
 from qgis.core import QgsCoordinateReferenceSystem, QgsCoordinateTransform
 from qgis.core import QgsPointXY, QgsRectangle
 from qgis.core import QgsProject
@@ -82,9 +82,9 @@ def update_ee_image_layer(image, layer, mapCanvas, shown=True, opacity=1.0):
 def get_layer_by_name(name):
     layers = QgsProject.instance().mapLayers().values()
 
-    for l in layers:
-        if l.name() == name:
-            return l
+    for layer in layers:
+        if layer.name() == name:
+            return layer
 
     return None
 

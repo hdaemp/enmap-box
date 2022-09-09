@@ -1,9 +1,6 @@
-from PyQt5.QtCore import QSize, QSizeF, Qt
-from qgis._core import QgsRasterLayer, QgsRasterDataProvider, QgsRectangle, QgsProcessingFeedback
-
-from typeguard import typechecked
-
 from enmapboxprocessing.extentwalker import ExtentWalker
+from qgis.core import QgsRectangle, QgsProcessingFeedback
+from typeguard import typechecked
 
 
 @typechecked

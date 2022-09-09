@@ -1,5 +1,4 @@
 import numpy as np
-from PyQt5.QtCore import QDateTime
 
 import processing
 from enmapbox.exampledata import enmap
@@ -9,6 +8,7 @@ from enmapboxprocessing.algorithm.translaterasteralgorithm import TranslateRaste
 from enmapboxprocessing.driver import Driver
 from enmapboxprocessing.rasterreader import RasterReader
 from enmapboxprocessing.test.testcase import TestCase
+from qgis.PyQt.QtCore import QDateTime
 from qgis.core import QgsRasterRange, QgsRasterLayer
 
 
@@ -80,6 +80,12 @@ class TestRasterMetadataReader(TestCase):
         self.assertEqual(5.8, reader.fwhm(1))
         self.assertEqual(5.8, reader.fwhm(1, reader.Nanometers))
         self.assertEqual(0.0058, reader.fwhm(1, reader.Micrometers))
+
+    def test_issue25(self):
+        reader = RasterReader(r'C:\Users\Andreas\Downloads\Neuer Ordner\test\PRISMA_DESTRIPPED_AOIvAL.bsq')
+        self.assertEqual('Nanometers', reader.wavelengthUnits(1))
+        reader = RasterReader(r'C:\Users\Andreas\Downloads\Neuer Ordner\test\FX17_Test_2022-09-07_12-40-04.raw')
+        self.assertEqual('Nanometers', reader.wavelengthUnits(1))
 
     def test_issue9(self):
         from testdata import force_1984_2021_060_319_HL_TSA_LNDLG_NDV_TSI_tif

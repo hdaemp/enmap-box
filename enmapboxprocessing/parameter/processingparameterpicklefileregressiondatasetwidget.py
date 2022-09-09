@@ -1,9 +1,8 @@
 from os.path import basename, join, dirname
 
-from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QWidget, QToolButton, QMenu, QMessageBox
-from PyQt5.uic import loadUi
-from qgis._gui import QgsFileWidget
+from enmapboxprocessing.algorithm.prepareregressiondatasetfromjsonalgorithm import \
+    PrepareRegressionDatasetFromJsonAlgorithm
+from qgis.PyQt.uic import loadUi
 
 from enmapbox import EnMAPBox
 from enmapboxprocessing.algorithm.prepareregressiondatasetfromcodealgorithm import \
@@ -24,6 +23,9 @@ from enmapboxprocessing.typing import RegressorDump
 from enmapboxprocessing.utils import Utils
 from processing import AlgorithmDialog
 from processing.gui.wrappers import WidgetWrapper
+from qgis.PyQt.QtGui import QIcon
+from qgis.PyQt.QtWidgets import QWidget, QToolButton, QMenu, QMessageBox
+from qgis.gui import QgsFileWidget
 
 
 class ProcessingParameterPickleFileRegressionDatasetWidget(QWidget):
@@ -59,6 +61,9 @@ class ProcessingParameterPickleFileRegressionDatasetWidget(QWidget):
 
             (PrepareRegressionDatasetFromFilesAlgorithm(),
              QIcon(':/images/themes/default/mIconFile.svg')),
+
+            (PrepareRegressionDatasetFromJsonAlgorithm(),
+             QIcon(':/images/themes/default/mIconFieldJson.svg'))
         ]:
             action = self.menu.addAction(alg.displayName())
             action.setIcon(icon)
@@ -75,7 +80,7 @@ class ProcessingParameterPickleFileRegressionDatasetWidget(QWidget):
                     dump = RegressorDump.fromDict(Utils.pickleLoad(filename))
                     samples, features = dump.X.shape
                     targets = len(dump.targets)
-                except:
+                except Exception:
                     continue
 
                 action = self.menu.addAction('')
