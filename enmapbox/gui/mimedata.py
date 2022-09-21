@@ -31,9 +31,9 @@ MDF_URILIST = 'text/uri-list'
 MDF_TEXT_HTML = 'text/html'
 MDF_TEXT_PLAIN = 'text/plain'
 
-MDF_QGIS_LAYER_STYLE = 'application/qgis.style'
-QGIS_URILIST_MIMETYPE = "application/x-vnd.qgis.qgis.uri"
-
+QGIS_STYLE = 'application/qgis.style'
+QGIS_URILIST_MIMETYPE = 'application/x-vnd.qgis.qgis.uri'
+QGIS_LAYERTREE_LAYERDEFINITION = 'application/qgis.layertree.layerdefinition'
 
 def attributesd2dict(attributes: QDomNamedNodeMap) -> str:
     d = {}
@@ -164,7 +164,7 @@ def extractMapLayers(mimeData: QMimeData,
                 newMapLayers.append(lyr)
                 break
 
-    elif MDF_RASTERBANDS in mimeData.formats():
+    if len(newMapLayers) == 0 and MDF_RASTERBANDS in mimeData.formats():
         data = pickle.loads(mimeData.data(MDF_RASTERBANDS))
 
         for t in data:
@@ -173,7 +173,7 @@ def extractMapLayers(mimeData: QMimeData,
             lyr.setRenderer(defaultRasterRenderer(lyr, bandIndices=[band]))
             newMapLayers.append(lyr)
 
-    elif MDF_DATASOURCETREEMODELDATA in mimeData.formats():
+    if len(newMapLayers) == 0 and MDF_DATASOURCETREEMODELDATA in mimeData.formats():
         # this drop comes from the datasource tree
         dsUUIDs = pickle.loads(mimeData.data(MDF_DATASOURCETREEMODELDATA))
 
@@ -188,12 +188,7 @@ def extractMapLayers(mimeData: QMimeData,
                         lyr.setRenderer(defaultRasterRenderer(lyr))
                     newMapLayers.append(lyr)
 
-    elif MDF_ENMAPBOX_LAYERTREEMODELDATA in mimeData.formats():
-        # this drop comes from the dock tree
-
-        s = ""
-
-    elif QGIS_URILIST_MIMETYPE in mimeData.formats():
+    if len(newMapLayers) == 0 and QGIS_URILIST_MIMETYPE in mimeData.formats():
         for uri in QgsMimeDataUtils.decodeUriList(mimeData):
 
             dataSources = DataSourceFactory.create(uri, project=project)
@@ -205,7 +200,7 @@ def extractMapLayers(mimeData: QMimeData,
                             lyr.setRenderer(defaultRasterRenderer(lyr))
                         newMapLayers.append(lyr)
 
-    elif MDF_URILIST in mimeData.formats():
+    if len(newMapLayers) == 0 and MDF_URILIST in mimeData.formats():
         for url in mimeData.urls():
 
             if basename(url.url()) == 'MTD_MSIL2A.xml':  # resolves GitHub issue #42

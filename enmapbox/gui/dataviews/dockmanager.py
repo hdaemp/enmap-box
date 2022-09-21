@@ -50,7 +50,7 @@ from enmapbox.gui.mapcanvas import \
     MapCanvas, KEY_LAST_CLICKED
 from enmapbox.gui.mimedata import \
     MDF_QGIS_LAYERTREEMODELDATA, MDF_ENMAPBOX_LAYERTREEMODELDATA, QGIS_URILIST_MIMETYPE, \
-    MDF_TEXT_HTML, MDF_URILIST, MDF_TEXT_PLAIN, MDF_QGIS_LAYER_STYLE, \
+    MDF_TEXT_HTML, MDF_URILIST, MDF_TEXT_PLAIN, QGIS_STYLE, \
     extractMapLayers, containsMapLayers
 from enmapbox.gui.utils import enmapboxUiPath
 from enmapbox.qgispluginsupport.qps.layerproperties import pasteStyleFromClipboard, pasteStyleToClipboard
@@ -1640,7 +1640,7 @@ class DockManagerLayerTreeModelMenuProvider(QgsLayerTreeViewMenuProvider):
 
         actionPasteStyle = menu.addAction('Paste Style')
         actionPasteStyle.triggered.connect(lambda *args, l=lyr: pasteStyleFromClipboard(l))
-        actionPasteStyle.setEnabled(MDF_QGIS_LAYER_STYLE in QApplication.clipboard().mimeData().formats())
+        actionPasteStyle.setEnabled(QGIS_STYLE in QApplication.clipboard().mimeData().formats())
         actionCopyStyle = menu.addAction('Copy Style')
         actionCopyStyle.triggered.connect(lambda *args, l=lyr: pasteStyleToClipboard(l))
         menu.addSeparator()
