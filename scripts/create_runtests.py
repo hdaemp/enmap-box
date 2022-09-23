@@ -21,7 +21,6 @@ def create_runtests():
 
     PATH_RUNTESTS_BAT = DIR_SCRIPTS / 'runtests.bat'
     PATH_RUNTESTS_SH = DIR_SCRIPTS / 'runtests.sh'
-    PATH_YAML = DIR_REPO / 'bitbucket-pipelines.yml'
 
     PREFACE_BAT = """
 :: use this script to run unit tests locally

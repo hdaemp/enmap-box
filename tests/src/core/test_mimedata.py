@@ -18,9 +18,11 @@ import sys
 import time
 import unittest
 
+from enmapbox.gui.dataviews.docks import MimeDataDockWidget
 from qgis.PyQt.QtCore import QMimeData, QByteArray, QUrl, Qt, QPoint
 from qgis.PyQt.QtGui import QDropEvent
 from qgis.PyQt.QtWidgets import QApplication
+from qgis._core import QgsMimeDataUtils
 from qgis.core import QgsProject, QgsMapLayer, QgsRasterLayer, QgsVectorLayer, QgsWkbTypes
 from qgis.gui import QgsMapCanvas
 
@@ -83,6 +85,21 @@ class MimeDataTests(EnMAPBoxTestCase):
             self.assertIsInstance(src, DataSource)
             self.assertTrue(src in dataSources)
             self.assertTrue(id(src) not in dataSourceObjectIDs)
+
+    def test_MimeDataDockWidget(self):
+        # 'application/x-vnd.qgis.qgis.ur'
+        from enmapbox.exampledata import enmap
+        uri = QgsMimeDataUtils.Uri()
+        uri.name = 'enmap_berlin.bsq'
+        uri.filePath = ''
+        uri.uri = enmap
+        uri.providerKey = 'gdal'
+
+        mimeData: QMimeData = QgsMimeDataUtils.encodeUriList([uri])
+
+        w = MimeDataDockWidget()
+        w.textEdit.insertFromMimeData(mimeData)
+        self.showGui(w)
 
     def test_maplayerhandling(self):
 

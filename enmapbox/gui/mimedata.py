@@ -51,7 +51,7 @@ def fromDataSourceList(dataSources):
     from enmapbox.gui.datasources.datasources import DataSource
 
     uriList = []
-    urlList = []
+
     for ds in dataSources:
 
         assert isinstance(ds, DataSource)
@@ -150,6 +150,11 @@ def extractMapLayers(mimeData: QMimeData,
     elif MDF_QGIS_LAYERTREEMODELDATA in mimeData.formats():
         QGIS_LAYERTREE_FORMAT = MDF_QGIS_LAYERTREEMODELDATA
 
+
+    def printDebugInfo(format):
+        if len(newMapLayers) > 0:
+            debugLog(f'Extracted {len(newMapLayers)} layers from {format}')
+
     if QGIS_LAYERTREE_FORMAT in mimeData.formats():
         doc = QDomDocument()
         doc.setContent(mimeData.data(QGIS_LAYERTREE_FORMAT))
@@ -163,6 +168,7 @@ def extractMapLayers(mimeData: QMimeData,
             if isinstance(lyr, QgsMapLayer):
                 newMapLayers.append(lyr)
                 break
+        printDebugInfo(QGIS_LAYERTREE_FORMAT)
 
     if len(newMapLayers) == 0 and MDF_RASTERBANDS in mimeData.formats():
         data = pickle.loads(mimeData.data(MDF_RASTERBANDS))
@@ -172,6 +178,8 @@ def extractMapLayers(mimeData: QMimeData,
             lyr = QgsRasterLayer(uri, baseName=baseName, providerType=providerKey)
             lyr.setRenderer(defaultRasterRenderer(lyr, bandIndices=[band]))
             newMapLayers.append(lyr)
+
+        printDebugInfo(MDF_RASTERBANDS)
 
     if len(newMapLayers) == 0 and MDF_DATASOURCETREEMODELDATA in mimeData.formats():
         # this drop comes from the datasource tree
@@ -188,6 +196,8 @@ def extractMapLayers(mimeData: QMimeData,
                         lyr.setRenderer(defaultRasterRenderer(lyr))
                     newMapLayers.append(lyr)
 
+        printDebugInfo(MDF_DATASOURCETREEMODELDATA)
+
     if len(newMapLayers) == 0 and QGIS_URILIST_MIMETYPE in mimeData.formats():
         for uri in QgsMimeDataUtils.decodeUriList(mimeData):
 
@@ -199,6 +209,8 @@ def extractMapLayers(mimeData: QMimeData,
                         if isinstance(lyr, QgsRasterLayer):
                             lyr.setRenderer(defaultRasterRenderer(lyr))
                         newMapLayers.append(lyr)
+
+        printDebugInfo(QGIS_URILIST_MIMETYPE)
 
     if len(newMapLayers) == 0 and MDF_URILIST in mimeData.formats():
         for url in mimeData.urls():
@@ -223,13 +235,10 @@ def extractMapLayers(mimeData: QMimeData,
                     mapLayers = tryToImportSensorProducts(filename)
                     newMapLayers.extend(mapLayers)
 
-    else:
-        s = ""
+        printDebugInfo(MDF_URILIST)
 
-    info = ['Extract map layers from QMimeData']
-    info.append('Formats:' + ','.join(mimeData.formats()))
-    info.append(f' {len(newMapLayers)} Map Layers: ' + '\n\t'.join([f'{lyr}' for lyr in newMapLayers]))
-    debugLog('\n'.join(info))
+    if len(newMapLayers) == 0:
+        debugLog('Could not extract map layers from mimedata')
 
     return newMapLayers
 

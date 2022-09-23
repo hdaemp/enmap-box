@@ -41,6 +41,7 @@ from qgis.PyQt.QtGui import QIcon, QDragEnterEvent, QDragMoveEvent, QDragLeaveEv
     QContextMenuEvent, QTextCursor
 from qgis.PyQt.QtWidgets import QToolButton, QMenu, QMainWindow, QFileDialog, QWidget, QMessageBox, QWidgetItem, \
     QApplication, QStyle, QProgressBar, QTextEdit
+from qgis._core import QgsMimeDataUtils
 from qgis.core import QgsCoordinateReferenceSystem, QgsMapLayer
 from qgis.core import QgsLayerTree
 from qgis.core import QgsLayerTreeLayer
@@ -480,15 +481,17 @@ class MimeDataTextEdit(QTextEdit):
             self.moveCursor(QTextCursor.End)
 
         for format in formats:
-            append('####{}####'.format(format))
+            append(f"## Format '{format}'")
             if format == 'text/uri-list':
                 self.insertPlainText(str(mimeData.data('text/uri-list')))
             if format == 'text/html':
                 self.insertHtml(mimeData.html())
             elif format == 'text/plain':
                 self.insertPlainText(mimeData.text())
+            elif format == 'application/x-vnd.qgis.qgis.uri':
+                for uri in QgsMimeDataUtils.decodeUriList(mimeData):
+                    raise NotImplementedError()
             else:
-                append('### (raw data as string) ###')
                 data = mimeData.data(format)
                 if isinstance(data, QByteArray):
                     self.insertPlainText(str(mimeData.data(format)))
