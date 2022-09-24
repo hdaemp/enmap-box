@@ -98,7 +98,7 @@ class MimeDataTests(EnMAPBoxTestCase):
         mimeData: QMimeData = QgsMimeDataUtils.encodeUriList([uri])
 
         w = MimeDataDockWidget()
-        w.textEdit.insertFromMimeData(mimeData)
+        w.dropMimeData(mimeData)
         self.showGui(w)
 
     def test_maplayerhandling(self):

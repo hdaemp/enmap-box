@@ -475,6 +475,18 @@ class MimeDataTextEdit(QTextEdit):
         self.mCurrentMimeData = mimeData
         self.clear()
 
+        css = """
+        <style>
+        table, td, th {
+          border: 1px solid;
+        }
+        
+        table {
+          width: 100%;
+          border-collapse: collapse;
+        }
+        </style>
+        """
         def append(txt):
             self.moveCursor(QTextCursor.End)
             self.insertPlainText(txt + '\n')
@@ -489,8 +501,28 @@ class MimeDataTextEdit(QTextEdit):
             elif format == 'text/plain':
                 self.insertPlainText(mimeData.text())
             elif format == 'application/x-vnd.qgis.qgis.uri':
-                for uri in QgsMimeDataUtils.decodeUriList(mimeData):
-                    raise NotImplementedError()
+                uriList = QgsMimeDataUtils.decodeUriList(mimeData)
+                html = [css]
+                for i, uri in enumerate(uriList):
+                    html.append(f'<p> Uri {i+1} <i>{uri.uri}</i>')
+                    html.append('<table>')
+                    html.append('<tr><th>Attribute</th><th>Value</th></tr>')
+                    for a in dir(uri):
+                        if a.startswith('__'):
+                            continue
+
+                        attr = getattr(uri, a)
+                        if callable(attr):
+                            try:
+                                value = str(attr())
+                            except Exception as ex:
+                                value = str(attr)
+                        else:
+                            value = str(attr)
+                        html.append(f'<tr><td>{a}</td><td>{value}</td></tr>')
+
+                    html.append('</table></p>')
+                self.insertHtml('\n'.join(html))
             else:
                 data = mimeData.data(format)
                 if isinstance(data, QByteArray):
@@ -513,6 +545,9 @@ class MimeDataDockWidget(QWidget):
         super(MimeDataDockWidget, self).__init__(parent=parent)
         loadUi(enmapboxUiPath('mimedatadockwidget.ui'), self)
 
+        self.textEdit: MimeDataTextEdit
+        assert isinstance(self.textEdit, MimeDataTextEdit)
+
     def loadFile(self, path):
         if os.path.isfile(path):
             data = None
@@ -532,6 +567,10 @@ class MimeDataDockWidget(QWidget):
             self.mFile = None
         self.sigSourceChanged.emit(str(path))
 
+    def dropMimeData(self, mimeData: QMimeData):
+        self.textEdit: MimeDataTextEdit
+        self.textEdit.insertFromMimeData(mimeData)
+
     def save(self, saveAs=False):
         if self.mFile is None or saveAs:
             path, filter = QFileDialog.getSaveFileName(self, 'Save file...',
@@ -549,6 +588,7 @@ class MimeDataDockWidget(QWidget):
                     file.write(self.textEdit.toHtml())
                 else:
                     file.write(self.textEdit.toPlainText())
+
 
 
 class TextDockWidget(QWidget):
