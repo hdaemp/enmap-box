@@ -83,13 +83,13 @@ class DataSourceManager(TreeModel):
             nodes = []
 
             # add new data from external sources
-            from enmapbox.gui.mimedata import MDF_QGIS_LAYERTREEMODELDATA
+            from enmapbox.gui.mimedata import QGIS_LAYERTREEMODELDATA
             if mimeData.hasFormat(MDF_URILIST):
                 for url in mimeData.urls():
                     toAdd.extend(DataSourceFactory.create(url))
 
             # add data dragged from QGIS
-            elif mimeData.hasFormat(MDF_QGIS_LAYERTREEMODELDATA) or mimeData.hasFormat(QGIS_URILIST_MIMETYPE):
+            elif mimeData.hasFormat(QGIS_LAYERTREEMODELDATA) or mimeData.hasFormat(QGIS_URILIST_MIMETYPE):
 
                 lyrs = extractMapLayers(mimeData, project=self.project())
                 toAdd.extend(DataSourceFactory.create(lyrs))
@@ -153,8 +153,8 @@ class DataSourceManager(TreeModel):
         # specifies the mime types handled by this model
         types = []
         # types.append(MDF_DATASOURCETREEMODELDATA)
-        from enmapbox.gui.mimedata import MDF_QGIS_LAYERTREEMODELDATA, QGIS_URILIST_MIMETYPE, MDF_URILIST
-        types.append(MDF_QGIS_LAYERTREEMODELDATA)
+        from enmapbox.gui.mimedata import QGIS_LAYERTREEMODELDATA, QGIS_URILIST_MIMETYPE, MDF_URILIST
+        types.append(QGIS_LAYERTREEMODELDATA)
         types.append(QGIS_URILIST_MIMETYPE)
         types.append(MDF_URILIST)
         return types

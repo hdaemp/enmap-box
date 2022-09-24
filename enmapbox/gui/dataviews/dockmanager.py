@@ -49,7 +49,7 @@ from enmapbox.gui.dataviews.docks import Dock, DockArea, \
 from enmapbox.gui.mapcanvas import \
     MapCanvas, KEY_LAST_CLICKED
 from enmapbox.gui.mimedata import \
-    MDF_QGIS_LAYERTREEMODELDATA, MDF_ENMAPBOX_LAYERTREEMODELDATA, QGIS_URILIST_MIMETYPE, \
+    QGIS_LAYERTREEMODELDATA, MDF_ENMAPBOX_LAYERTREEMODELDATA, QGIS_URILIST_MIMETYPE, \
     MDF_TEXT_HTML, MDF_URILIST, MDF_TEXT_PLAIN, QGIS_STYLE, \
     extractMapLayers, containsMapLayers
 from enmapbox.gui.utils import enmapboxUiPath
@@ -1110,7 +1110,7 @@ class DockManagerTreeModel(QgsLayerTreeModel):
     def mimeTypes(self):
         # specifies the mime types handled by this model
         types = [MDF_ENMAPBOX_LAYERTREEMODELDATA,
-                 MDF_QGIS_LAYERTREEMODELDATA,
+                 QGIS_LAYERTREEMODELDATA,
                  MDF_TEXT_HTML,
                  MDF_TEXT_PLAIN,
                  MDF_URILIST]
@@ -1217,8 +1217,8 @@ class DockManagerTreeModel(QgsLayerTreeModel):
         doc.appendChild(rootElem)
         mimeData.setData(MDF_ENMAPBOX_LAYERTREEMODELDATA, doc.toByteArray())
 
-        if MDF_QGIS_LAYERTREEMODELDATA in mimeSuper.formats():
-            mimeData.setData(MDF_ENMAPBOX_LAYERTREEMODELDATA, mimeSuper.data(MDF_QGIS_LAYERTREEMODELDATA))
+        if QGIS_LAYERTREEMODELDATA in mimeSuper.formats():
+            mimeData.setData(MDF_ENMAPBOX_LAYERTREEMODELDATA, mimeSuper.data(QGIS_LAYERTREEMODELDATA))
             # mimeData.setData(MDF_LAYERTREEMODELDATA, mimeSuper.data(MDF_LAYERTREEMODELDATA))
 
         if QGIS_URILIST_MIMETYPE in mimeSuper.formats():

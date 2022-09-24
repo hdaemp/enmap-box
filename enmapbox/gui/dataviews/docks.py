@@ -459,7 +459,7 @@ class MimeDataTextEdit(QTextEdit):
         self.setOverwriteMode(False)
         self.mCurrentMimeData: QMimeData = QMimeData()
 
-    def canInsertFromMimeData(self, QMimeData) -> bool:
+    def canInsertFromMimeData(self, mimeData: QMimeData) -> bool:
         return True
 
     def currentMimeData(self) -> QMimeData:

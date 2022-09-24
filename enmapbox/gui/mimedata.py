@@ -21,7 +21,7 @@ MDF_DATASOURCETREEMODELDATA = 'application/enmapbox.datasourcetreemodeldata'
 MDF_DATASOURCETREEMODELDATA_XML = 'data_source_tree_model_data'
 
 MDF_ENMAPBOX_LAYERTREEMODELDATA = 'application/enmapbox.layertreemodeldata'
-MDF_QGIS_LAYERTREEMODELDATA = 'application/qgis.layertreemodeldata'
+QGIS_LAYERTREEMODELDATA = 'application/qgis.layertreemodeldata'
 MDF_QGIS_LAYERTREEMODELDATA_XML = 'layer_tree_model_data'
 
 MDF_PYTHON_OBJECTS = 'application/enmapbox/objectreference'
@@ -85,7 +85,7 @@ def toDataSourceList(mimeData) -> typing.List[DataSource]:
     return dataSources
 
 
-def fromLayerList(mapLayers):
+def fromLayerList(mapLayers: List[QgsMapLayer]):
     """
     Converts a list of QgsMapLayers into a QMimeData object
     :param mapLayers: [list-of-QgsMapLayers]
@@ -108,7 +108,7 @@ def fromLayerList(mapLayers):
     for c in tree.children():
         c.writeXml(node, context)
 
-    mimeData.setData(MDF_QGIS_LAYERTREEMODELDATA, doc.toByteArray())
+    mimeData.setData(QGIS_LAYERTREEMODELDATA, doc.toByteArray())
 
     return mimeData
 
@@ -119,7 +119,7 @@ def containsMapLayers(mimeData: QMimeData) -> bool:
     :param mimeData:
     :return:
     """
-    valid = [MDF_RASTERBANDS, MDF_DATASOURCETREEMODELDATA, MDF_QGIS_LAYERTREEMODELDATA, QGIS_URILIST_MIMETYPE,
+    valid = [MDF_RASTERBANDS, MDF_DATASOURCETREEMODELDATA, QGIS_LAYERTREEMODELDATA, QGIS_URILIST_MIMETYPE,
              MDF_URILIST]
 
     for f in valid:
@@ -147,8 +147,8 @@ def extractMapLayers(mimeData: QMimeData,
     QGIS_LAYERTREE_FORMAT = None
     if MDF_ENMAPBOX_LAYERTREEMODELDATA in mimeData.formats():
         QGIS_LAYERTREE_FORMAT = MDF_ENMAPBOX_LAYERTREEMODELDATA
-    elif MDF_QGIS_LAYERTREEMODELDATA in mimeData.formats():
-        QGIS_LAYERTREE_FORMAT = MDF_QGIS_LAYERTREEMODELDATA
+    elif QGIS_LAYERTREEMODELDATA in mimeData.formats():
+        QGIS_LAYERTREE_FORMAT = QGIS_LAYERTREEMODELDATA
 
 
     def printDebugInfo(format):
