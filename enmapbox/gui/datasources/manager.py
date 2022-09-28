@@ -24,17 +24,14 @@ from qgis.PyQt.QtWidgets import QWidget, QDialog, QMenu, QAction, QApplication, 
 from qgis.core import QgsLayerTreeGroup, QgsLayerTreeLayer, QgsMapLayer, QgsProject, QgsWkbTypes, QgsRasterLayer, \
     QgsRasterDataProvider, QgsRasterRenderer, QgsVectorLayer, QgsDataItem, QgsLayerItem, Qgis
 from qgis.core import QgsMimeDataUtils
-
 from qgis.gui import QgisInterface, QgsMapCanvas, QgsDockWidget
-
 from typeguard import typechecked
-
 from .datasources import DataSource, SpatialDataSource, VectorDataSource, RasterDataSource, \
     ModelDataSource, FileDataSource, LayerItem
 from .metadata import RasterBandTreeNode
 from ..dataviews.docks import Dock
 from ..mapcanvas import MapCanvas
-from ..mimedata import MDF_URILIST, QGIS_URILIST_MIMETYPE, extractMapLayers, fromDataSourceList
+from ..mimedata import MDF_URILIST, QGIS_URILIST_MIMETYPE, QGIS_LAYERTREEMODELDATA, extractMapLayers, fromDataSourceList
 from ...qgispluginsupport.qps.speclib.core import is_spectral_library
 from ...qgispluginsupport.qps.subdatasets import SubDatasetSelectionDialog
 
@@ -72,6 +69,14 @@ class DataSourceManager(TreeModel):
         self.mEnMAPBoxInstance = enmapbox
         self.mProject = enmapbox.project()
 
+    def canDropMimeData(self, data: QMimeData, action: Qt.DropAction,
+                        row: int, column: int, parent: QModelIndex) -> bool:
+
+        for f in data.formats():
+            if f in [MDF_URILIST, QGIS_LAYERTREEMODELDATA]:
+                return True
+        return False
+
     def dropMimeData(self, mimeData: QMimeData, action, row: int, column: int, parent: QModelIndex):
 
         assert isinstance(mimeData, QMimeData)
@@ -83,7 +88,6 @@ class DataSourceManager(TreeModel):
             nodes = []
 
             # add new data from external sources
-            from enmapbox.gui.mimedata import QGIS_LAYERTREEMODELDATA
             if mimeData.hasFormat(MDF_URILIST):
                 for url in mimeData.urls():
                     toAdd.extend(DataSourceFactory.create(url))
@@ -191,6 +195,9 @@ class DataSourceManager(TreeModel):
         warnings.warn(DeprecationWarning('Use .dataSources() instead.'), stacklevel=2)
         return self.dataSources(*args)
 
+    def supportedDropActions(self) -> Qt.DropActions:
+        return Qt.CopyAction | Qt.MoveAction
+
     def sourceLayers(self) -> List[QgsMapLayer]:
         """
         Returns layers that cannot be loaded by uri + provider strings. So far used for "memory" sources only
@@ -274,9 +281,9 @@ class DataSourceManager(TreeModel):
                     lyr = dataItem.referenceLayer()
                     if isinstance(lyr, QgsVectorLayer):
                         updateState = f'{lyr.isValid()}|{lyr.name()}|' \
-                                     f'{lyr.featureCount()}|' \
-                                     f'{lyr.geometryType()}|' \
-                                     f'{is_spectral_library(lyr)}'
+                                      f'{lyr.featureCount()}|' \
+                                      f'{lyr.geometryType()}|' \
+                                      f'{is_spectral_library(lyr)}'
 
             oldInfo = self.mUpdateState.get(sid, None)
             if oldInfo is None:
@@ -307,6 +314,7 @@ class DataSourceManager(TreeModel):
             s = ""
         if isinstance(node, (DataSource, RasterBandTreeNode)):
             flags = flags | Qt.ItemIsDragEnabled
+        flags = flags | Qt.ItemIsDropEnabled
         return flags
 
     def addSources(self, *args, **kwds):

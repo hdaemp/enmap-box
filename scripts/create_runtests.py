@@ -1,5 +1,4 @@
 import pathlib
-import re
 import site
 
 site.addsitedir(pathlib.Path(__file__).parents[1])

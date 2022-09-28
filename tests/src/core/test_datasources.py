@@ -232,7 +232,7 @@ class DataSourceTests(EnMAPBoxTestCase):
         self.showGui(panel)
 
     def test_DataSource_Drag_and_Drop(self):
-        from enmapbox.exampledata import enmap, landcover_polygons
+        from enmapbox.exampledata import enmap, landcover_polygon
 
         model = DataSourceManager()
         panel = DataSourceManagerPanelUI()
@@ -246,7 +246,7 @@ class DataSourceTests(EnMAPBoxTestCase):
         tvQ: QgsLayerTreeView = iface.layerTreeView()
         self.assertEqual(len(tvQ.model().sourceModel().rootGroup().findLayerIds()), 0)
         iface.addRasterLayer(enmap)
-        iface.addVectorLayer(landcover_polygons)
+        iface.addVectorLayer(landcover_polygon)
         self.assertEqual(len(tvQ.model().sourceModel().rootGroup().findLayerIds()), 2)
 
         modelQ: QgsLayerTreeModel = tvQ.model().sourceModel()
