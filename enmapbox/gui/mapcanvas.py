@@ -27,7 +27,7 @@ from enmapbox import enmapboxSettings
 from enmapbox.gui import MapTools, MapToolCenter, PixelScaleExtentMapTool, \
     CursorLocationMapTool, FullExtentMapTool, QgsMapToolAddFeature, QgsMapToolSelect, \
     CrosshairDialog, CrosshairStyle, CrosshairMapCanvasItem
-from enmapbox.gui.mimedata import containsMapLayers, extractMapLayers
+from enmapbox.gui.mimedata import containsMapLayers, extractMapLayers, MDF_ENMAPBOX_SOURCE_WIDGET
 from enmapbox.qgispluginsupport.qps.utils import SpatialPoint, SpatialExtent, qgisAppQgisInterface
 from enmapbox.settings import EnMAPBoxSettings
 from qgis.PyQt.QtCore import Qt, QObject, QCoreApplication, pyqtSignal, QEvent, QPointF, QMimeData, QTimer, QSize, \
@@ -1382,8 +1382,10 @@ class MapCanvas(QgsMapCanvas):
         # check mime types we can handle
         assert isinstance(event, QDragEnterEvent)
         if containsMapLayers(mimeData):
-            event.setDropAction(Qt.CopyAction)  # copy but do not remove
-            event.accept()
+            if event.dropAction() == Qt.MoveAction and not MDF_ENMAPBOX_SOURCE_WIDGET in mimeData.formats():
+                event.ignore()
+            else:
+                event.accept()
         else:
             event.ignore()
 
@@ -1397,7 +1399,7 @@ class MapCanvas(QgsMapCanvas):
             mimeData = event.mimeData()
             assert isinstance(mimeData, QMimeData)
 
-            # add map layers
+            # extract map layers
             mapLayers = extractMapLayers(mimeData, project=self.project())
             to_add = []
             for lyr in mapLayers:
@@ -1406,13 +1408,16 @@ class MapCanvas(QgsMapCanvas):
                 to_add.append(lyr)
 
             if len(to_add) > 0:
-                # if this canvas is linked to a QgsLayerTree, add new layer to the TOC, not the canvas instance.
+                # if this canvas is linked to a QgsLayerTree, add a new layer to the TOC, not the canvas instance!
                 layerTree = self.layerTree()
                 if isinstance(layerTree, QgsLayerTree):
                     for lyr in reversed(to_add):
                         layerTree.insertLayer(0, lyr)
                 else:
                     self.setLayers(to_add + self.layers())
+
+            if MDF_ENMAPBOX_SOURCE_WIDGET not in mimeData.formats() and event.dropAction() == Qt.MoveAction:
+                event.setDropAction(Qt.CopyAction)
 
             event.accept()
 

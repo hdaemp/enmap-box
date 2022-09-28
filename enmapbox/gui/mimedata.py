@@ -21,6 +21,7 @@ MDF_RASTERBANDS = 'application/enmapbox.rasterbanddata'
 MDF_DATASOURCETREEMODELDATA = 'application/enmapbox.datasourcetreemodeldata'
 MDF_DATASOURCETREEMODELDATA_XML = 'data_source_tree_model_data'
 
+MDF_ENMAPBOX_SOURCE_WIDGET = 'application/enmapbox.source_widget'
 MDF_ENMAPBOX_LAYERTREEMODELDATA = 'application/enmapbox.layertreemodeldata'
 QGIS_LAYERTREEMODELDATA = 'application/qgis.layertreemodeldata'
 MDF_QGIS_LAYERTREEMODELDATA_XML = 'layer_tree_model_data'
@@ -34,7 +35,7 @@ MDF_TEXT_PLAIN = 'text/plain'
 
 QGIS_STYLE = 'application/qgis.style'
 QGIS_URILIST_MIMETYPE = 'application/x-vnd.qgis.qgis.uri'
-QGIS_LAYERTREE_LAYERDEFINITION = 'application/qgis.layertree.layerdefinition'
+QGIS_LAYERTREE_LAYERDEFINITION = 'application/qgis.layertree.layerdefinitions'
 
 
 def attributesd2dict(attributes: QDomNamedNodeMap) -> str:
@@ -44,6 +45,12 @@ def attributesd2dict(attributes: QDomNamedNodeMap) -> str:
         attribute = attributes.item(i)
         d[attribute.nodeName()] = attribute.nodeValue()
     return d
+
+
+def setEnMAPBoxID(mimeData: QMimeData, obj: object = None):
+    if isinstance(obj, object):
+        mimeData.setData(MDF_ENMAPBOX_SOURCE_WIDGET, obj.__class__.__name__.encode())
+    mimeData.setData('application/qgis.application.pid', '-9999'.encode())
 
 
 def fromDataSourceList(dataSources, project: QgsProject = None):
@@ -79,9 +86,7 @@ def fromDataSourceList(dataSources, project: QgsProject = None):
             root.addLayer(lyr)
         indices = [m.node2index(n) for n in root.findLayers()]
         mdLayers: QMimeData = m.mimeData(indices)
-        # we need to change the QGIS application ID, if not, the main QGIS tries to read the temporary layer
-        # instance from QgsProject.instance()
-        mdLayers.setData('application/qgis.application.pid', '-9999'.encode())
+
         for f in mdLayers.formats():
             mimeData.setData(f, mdLayers.data(f))
 

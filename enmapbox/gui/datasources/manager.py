@@ -31,7 +31,8 @@ from .datasources import DataSource, SpatialDataSource, VectorDataSource, Raster
 from .metadata import RasterBandTreeNode
 from ..dataviews.docks import Dock
 from ..mapcanvas import MapCanvas
-from ..mimedata import MDF_URILIST, QGIS_URILIST_MIMETYPE, QGIS_LAYERTREEMODELDATA, extractMapLayers, fromDataSourceList
+from ..mimedata import MDF_URILIST, QGIS_URILIST_MIMETYPE, QGIS_LAYERTREEMODELDATA, extractMapLayers, \
+    fromDataSourceList, MDF_ENMAPBOX_SOURCE_WIDGET, setEnMAPBoxID
 from ...qgispluginsupport.qps.speclib.core import is_spectral_library
 from ...qgispluginsupport.qps.subdatasets import SubDatasetSelectionDialog
 
@@ -125,23 +126,25 @@ class DataSourceManager(TreeModel):
         sourceList = [d.source() for d in dataSources]
 
         if len(dataSources) > 0:
-            return fromDataSourceList(dataSources)
+            mimeData = fromDataSourceList(dataSources)
+            setEnMAPBoxID(mimeData, self)
+            return mimeData
+        else:
+            bandInfo = list()
+            for node in bandNodes:
+                node: RasterBandTreeNode
+                ds: RasterDataSource = node.rasterSource()
+                if isinstance(ds, RasterDataSource):
+                    source = ds.dataItem().path()
+                    provider = ds.dataItem().providerKey()
+                    band = node.mBandIndex
+                    # baseName = '{}:{}'.format(ds.name(), node.name())
+                    baseName = ds.name()
+                    bandInfo.append((source, baseName, provider, band))
 
-        bandInfo = list()
-        for node in bandNodes:
-            node: RasterBandTreeNode
-            ds: RasterDataSource = node.rasterSource()
-            if isinstance(ds, RasterDataSource):
-                source = ds.dataItem().path()
-                provider = ds.dataItem().providerKey()
-                band = node.mBandIndex
-                # baseName = '{}:{}'.format(ds.name(), node.name())
-                baseName = ds.name()
-                bandInfo.append((source, baseName, provider, band))
-
-        if len(bandInfo) > 0:
-            from enmapbox.gui.mimedata import MDF_RASTERBANDS
-            mimeData.setData(MDF_RASTERBANDS, pickle.dumps(bandInfo))
+            if len(bandInfo) > 0:
+                from enmapbox.gui.mimedata import MDF_RASTERBANDS
+                mimeData.setData(MDF_RASTERBANDS, pickle.dumps(bandInfo))
 
         urls = [QUrl.fromLocalFile(s) if os.path.isfile(s) else QUrl(s) for s in sourceList]
         if len(urls) > 0:

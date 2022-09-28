@@ -35,7 +35,7 @@ from enmapbox.gui.mapcanvas import \
 from enmapbox.gui.mimedata import \
     QGIS_LAYERTREEMODELDATA, MDF_ENMAPBOX_LAYERTREEMODELDATA, QGIS_URILIST_MIMETYPE, \
     MDF_TEXT_HTML, MDF_URILIST, MDF_TEXT_PLAIN, QGIS_STYLE, \
-    extractMapLayers, containsMapLayers
+    extractMapLayers, containsMapLayers, MDF_ENMAPBOX_SOURCE_WIDGET, QGIS_LAYERTREE_LAYERDEFINITION, setEnMAPBoxID
 from enmapbox.gui.utils import enmapboxUiPath
 from enmapbox.qgispluginsupport.qps.layerproperties import pasteStyleFromClipboard, pasteStyleToClipboard
 from enmapbox.qgispluginsupport.qps.speclib.core import is_spectral_library, profile_field_list
@@ -45,6 +45,7 @@ from qgis.PyQt.QtCore import Qt, QMimeData, QModelIndex, QObject, QTimer, pyqtSi
 from qgis.PyQt.QtGui import QIcon, QDragEnterEvent, QDragMoveEvent, QDropEvent, QDragLeaveEvent
 from qgis.PyQt.QtWidgets import QHeaderView, QMenu, QAbstractItemView, QApplication, QWidget, QToolButton, QAction
 from qgis.PyQt.QtXml import QDomDocument, QDomElement
+from qgis._core import QgsLayerDefinition
 from qgis.core import Qgis, QgsCoordinateReferenceSystem, QgsMapLayer, QgsVectorLayer, QgsRasterLayer, \
     QgsProject, QgsReadWriteContext, \
     QgsLayerTreeLayer, QgsLayerTreeNode, QgsLayerTreeGroup, \
@@ -615,6 +616,8 @@ class DockManager(QObject):
                 # layers = [s.asMapLayer() for s in dropped_maplayers]
                 NEW_DOCK.addLayers(dropped_maplayers)
 
+            if MDF_ENMAPBOX_SOURCE_WIDGET not in mimeData.formats() and event.dropAction() == Qt.MoveAction:
+                event.setDropAction(Qt.CopyAction)
             event.accept()
 
     def __len__(self):
@@ -1154,7 +1157,13 @@ class DockManagerTreeModel(QgsLayerTreeModel):
             if 'application/qgis.application.pid' in mimeData.formats():
                 qgisPid, ok = mimeData.data('application/qgis.application.pid').toInt()
 
-                if ok and qgisPid != QCoreApplication.applicationPid():
+                # if ok and qgisPid != QCoreApplication.applicationPid():
+                if ok and MDF_ENMAPBOX_SOURCE_WIDGET in mimeData.formats():
+                    encodedLayerDefinitionData = mimeData.data(QGIS_LAYERTREE_LAYERDEFINITION)
+                    layerDefinitionDoc = QDomDocument()
+                    if not layerDefinitionDoc.setContent(encodedLayerDefinitionData):
+                        return False
+                    success, msg = QgsLayerDefinition.loadLayerDefinition(layerDefinitionDoc, self.project(), parentLayerGroup)
                     raise NotImplementedError()
                 else:
                     encodedLayerTreeData = mimeData.data('application/qgis.layertreemodeldata')
@@ -1204,26 +1213,9 @@ class DockManagerTreeModel(QgsLayerTreeModel):
         nodesFinal = self.indexes2nodes(indexes, True)
 
         mimeSuper = super(DockManagerTreeModel, self).mimeData(indexes)
-        if True:
-            return mimeSuper
+        setEnMAPBoxID(mimeSuper, self)
+        return mimeSuper
 
-        mimeData = QMimeData()
-        doc = QDomDocument()
-        rootElem = doc.createElement("dock_tree_model_data")
-        context = QgsReadWriteContext()
-        for node in nodesFinal:
-            node.writeXml(rootElem, context)
-        doc.appendChild(rootElem)
-        mimeData.setData(MDF_ENMAPBOX_LAYERTREEMODELDATA, doc.toByteArray())
-
-        if QGIS_LAYERTREEMODELDATA in mimeSuper.formats():
-            mimeData.setData(MDF_ENMAPBOX_LAYERTREEMODELDATA, mimeSuper.data(QGIS_LAYERTREEMODELDATA))
-            # mimeData.setData(MDF_LAYERTREEMODELDATA, mimeSuper.data(MDF_LAYERTREEMODELDATA))
-
-        if QGIS_URILIST_MIMETYPE in mimeSuper.formats():
-            mimeData.setData(QGIS_URILIST_MIMETYPE, mimeSuper.data(QGIS_URILIST_MIMETYPE))
-
-        return mimeData
 
     def parentNodesFromIndices(self, indices, nodeInstanceType=DockTreeNode):
         """
