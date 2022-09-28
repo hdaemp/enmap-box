@@ -1155,18 +1155,20 @@ class DockManagerTreeModel(QgsLayerTreeModel):
             ok = False
             qgisPid = None
             if 'application/qgis.application.pid' in mimeData.formats():
-                qgisPid, ok = mimeData.data('application/qgis.application.pid').toInt()
-
                 # if ok and qgisPid != QCoreApplication.applicationPid():
                 if ok and MDF_ENMAPBOX_SOURCE_WIDGET in mimeData.formats():
                     encodedLayerDefinitionData = mimeData.data(QGIS_LAYERTREE_LAYERDEFINITION)
                     layerDefinitionDoc = QDomDocument()
                     if not layerDefinitionDoc.setContent(encodedLayerDefinitionData):
                         return False
-                    success, msg = QgsLayerDefinition.loadLayerDefinition(layerDefinitionDoc, self.project(), parentLayerGroup)
-                    raise NotImplementedError()
+                    context = QgsReadWriteContext()
+
+                    success, msg = QgsLayerDefinition.loadLayerDefinition(
+                        layerDefinitionDoc, self.project(), parentLayerGroup, context)
+                    if not success:
+                        raise Exception(msg)
                 else:
-                    encodedLayerTreeData = mimeData.data('application/qgis.layertreemodeldata')
+                    encodedLayerTreeData = mimeData.data(QGIS_LAYERTREEMODELDATA)
 
                     layerTreeDoc = QDomDocument()
                     if not layerTreeDoc.setContent(encodedLayerTreeData):
