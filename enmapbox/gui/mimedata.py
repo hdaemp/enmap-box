@@ -7,6 +7,7 @@ from typing import List
 from enmapbox import debugLog
 from qgis.PyQt.QtCore import QMimeData, QUrl, QByteArray
 from qgis.PyQt.QtXml import QDomNamedNodeMap, QDomDocument
+from qgis.core import QgsLayerTreeModel
 from qgis.core import QgsLayerItem
 from qgis.core import QgsMapLayer, QgsRasterLayer, QgsProject, QgsReadWriteContext, \
     QgsMimeDataUtils, QgsLayerTree
@@ -35,6 +36,7 @@ QGIS_STYLE = 'application/qgis.style'
 QGIS_URILIST_MIMETYPE = 'application/x-vnd.qgis.qgis.uri'
 QGIS_LAYERTREE_LAYERDEFINITION = 'application/qgis.layertree.layerdefinition'
 
+
 def attributesd2dict(attributes: QDomNamedNodeMap) -> str:
     d = {}
     assert isinstance(attributes, QDomNamedNodeMap)
@@ -44,33 +46,49 @@ def attributesd2dict(attributes: QDomNamedNodeMap) -> str:
     return d
 
 
-def fromDataSourceList(dataSources):
+def fromDataSourceList(dataSources, project: QgsProject = None):
     if not isinstance(dataSources, list):
         dataSources = [dataSources]
 
     from enmapbox.gui.datasources.datasources import DataSource
 
-    uriList = []
-
+    # create a temporary layer tree and use its own mimeData() routine
+    tmpLayers: List[QgsMapLayer] = []
+    uris: List[QgsMimeDataUtils.Uri] = []
     for ds in dataSources:
-
         assert isinstance(ds, DataSource)
-
         dataItem = ds.dataItem()
-        uris = dataItem.mimeUris()
-        if not isinstance(dataItem, QgsLayerItem):
+        if isinstance(dataItem, QgsLayerItem):
+            lyr = ds.asMapLayer(project=project)
+            if isinstance(lyr, QgsMapLayer):
+                tmpLayers.append(lyr)
+
+        elif isinstance(ds, DataSource):
             uri = QgsMimeDataUtils.Uri()
             uri.name = dataItem.name()
             uri.filePath = dataItem.path()
             uri.uri = dataItem.path()
             uri.providerKey = dataItem.providerKey()
-            uris = [uri]
-        uriList.extend(uris)
+            uris.append(uri)
 
-    urlList = [QUrl.fromLocalFile(u.uri) for u in uriList]
+    mimeData: QMimeData = QMimeData()
+    if len(tmpLayers) > 0:
+        root = QgsLayerTree()
+        m = QgsLayerTreeModel(root)
+        for lyr in tmpLayers:
+            root.addLayer(lyr)
+        indices = [m.node2index(n) for n in root.findLayers()]
+        mdLayers: QMimeData = m.mimeData(indices)
+        # we need to change the QGIS application ID, if not, the main QGIS tries to read the temporary layer
+        # instance from QgsProject.instance()
+        mdLayers.setData('application/qgis.application.pid', '-9999'.encode())
+        for f in mdLayers.formats():
+            mimeData.setData(f, mdLayers.data(f))
 
-    mimeData: QMimeData = QgsMimeDataUtils.encodeUriList(uriList)
-    mimeData.setUrls(urlList)
+    if len(uris) > 0:
+        mdUris: QMimeData = QgsMimeDataUtils.encodeUriList(uris)
+        for f in mdUris.formats():
+            mimeData.setData(f, mdUris.data(f))
     return mimeData
 
 
@@ -150,7 +168,6 @@ def extractMapLayers(mimeData: QMimeData,
     elif QGIS_LAYERTREEMODELDATA in mimeData.formats():
         QGIS_LAYERTREE_FORMAT = QGIS_LAYERTREEMODELDATA
 
-
     def printDebugInfo(format):
         if len(newMapLayers) > 0:
             debugLog(f'Extracted {len(newMapLayers)} layers from {format}')
@@ -167,7 +184,7 @@ def extractMapLayers(mimeData: QMimeData,
             lyr = project.mapLayer(layerId)
             if isinstance(lyr, QgsMapLayer):
                 newMapLayers.append(lyr)
-                break
+
         printDebugInfo(QGIS_LAYERTREE_FORMAT)
 
     if len(newMapLayers) == 0 and MDF_RASTERBANDS in mimeData.formats():
@@ -200,15 +217,22 @@ def extractMapLayers(mimeData: QMimeData,
 
     if len(newMapLayers) == 0 and QGIS_URILIST_MIMETYPE in mimeData.formats():
         for uri in QgsMimeDataUtils.decodeUriList(mimeData):
+            uri: QgsMimeDataUtils.Uri
+            error = f'Unable to extract {uri.data()} from mimeData'
+            lyr = None
+            success = False
+            if uri.layerType == 'raster':
+                lyr, success = uri.rasterLayer(error)
+            elif uri.layerType == 'vector':
+                lyr, success = uri.vectorLayer(error)
 
-            dataSources = DataSourceFactory.create(uri, project=project)
-            for dataSource in dataSources:
-                if isinstance(dataSource, SpatialDataSource):
-                    lyr = dataSource.asMapLayer(project=project)
-                    if isinstance(lyr, QgsMapLayer):
-                        if isinstance(lyr, QgsRasterLayer):
-                            lyr.setRenderer(defaultRasterRenderer(lyr))
-                        newMapLayers.append(lyr)
+            if lyr is None:
+                lyr = project.mapLayer(uri.layerId)
+
+            if isinstance(lyr, QgsMapLayer) and lyr.isValid():
+                # if isinstance(lyr, QgsRasterLayer):
+                #    lyr.setRenderer(defaultRasterRenderer(lyr))
+                newMapLayers.append(lyr)
 
         printDebugInfo(QGIS_URILIST_MIMETYPE)
 

@@ -134,7 +134,7 @@ class SpatialDataSource(DataSource):
         return dataItemToLayer(self.dataItem(), project=project)
 
     def mapLayer(self) -> QgsMapLayer:
-        warnings.warn(DeprecationWarning('Use .asMapLayer() instead'))
+        warnings.warn(DeprecationWarning('Use .asMapLayer() instead'), stacklevel=2)
         return self.asMapLayer()
 
     def dataItem(self) -> QgsLayerItem:

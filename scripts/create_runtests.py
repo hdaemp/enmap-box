@@ -94,30 +94,6 @@ export PYTHONPATH="${PYTHONPATH}:$(pwd):/usr/share/qgis/python/plugins"
     yamlLines = ['- {}\n'.format(line) for line in linesYAML]
     print(''.join(yamlLines))
 
-    if False:
-        assert PATH_YAML.is_file()
-        with open(PATH_YAML, 'r') as f:
-            linesYAML = f.readlines()
-
-        startLines = []
-        endLines = []
-
-        for i, line in enumerate(linesYAML):
-            if re.search(r'\W*# START UNITTESTS', line):
-                startLines.insert(0, i)
-            if re.search(r'\W*# END UNITTESTS', line):
-                endLines.insert(0, i)
-
-        assert len(startLines) == len(endLines)
-
-        for (i0, ie) in zip(startLines, endLines):
-            prefix = re.search(r'^.*(?=# START UNITTESTS)', linesYAML[i0]).group()
-            inplace = ['{}- {}\n'.format(prefix, line) for line in linesYAML]
-            linesYAML[i0 + 1:ie - 1] = inplace
-        print('Update {}...'.format(PATH_YAML))
-        with open(PATH_YAML, 'w', encoding='utf-8', newline='\n') as f:
-            f.write(''.join(linesYAML))
-
 
 if __name__ == "__main__":
     create_runtests()

@@ -480,13 +480,14 @@ class MimeDataTextEdit(QTextEdit):
         table, td, th {
           border: 1px solid;
         }
-        
+
         table {
           width: 100%;
           border-collapse: collapse;
         }
         </style>
         """
+
         def append(txt):
             self.moveCursor(QTextCursor.End)
             self.insertPlainText(txt + '\n')
@@ -504,7 +505,7 @@ class MimeDataTextEdit(QTextEdit):
                 uriList = QgsMimeDataUtils.decodeUriList(mimeData)
                 html = [css]
                 for i, uri in enumerate(uriList):
-                    html.append(f'<p> Uri {i+1} <i>{uri.uri}</i>')
+                    html.append(f'<p> Uri {i + 1} <i>{uri.uri}</i>')
                     html.append('<table>')
                     html.append('<tr><th>Attribute</th><th>Value</th></tr>')
                     for a in dir(uri):
@@ -588,7 +589,6 @@ class MimeDataDockWidget(QWidget):
                     file.write(self.textEdit.toHtml())
                 else:
                     file.write(self.textEdit.toPlainText())
-
 
 
 class TextDockWidget(QWidget):

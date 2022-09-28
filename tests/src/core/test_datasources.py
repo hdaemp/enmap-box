@@ -17,18 +17,26 @@ import pathlib
 import tempfile
 import unittest
 from time import sleep
+from typing import List
 
+from qgis.PyQt.QtCore import QMimeData, QPointF, Qt, QEvent
+from qgis.PyQt.QtGui import QDropEvent
 from osgeo import ogr, gdal
-from qgis.PyQt import sip
-from qgis.core import QgsProject, QgsMapLayer, QgsRasterLayer, QgsVectorLayer, QgsRasterRenderer, QgsRasterDataProvider
-from qgis.gui import QgsMapCanvas
 
 from enmapbox.exampledata import enmap, hires, landcover_polygons, library_gpkg, enmap_srf_library
 from enmapbox.gui.datasources.datasources import SpatialDataSource, DataSource, RasterDataSource, VectorDataSource, \
     FileDataSource
-from enmapbox.gui.datasources.manager import DataSourceManager, DataSourceManagerPanelUI, DataSourceFactory
+from enmapbox.gui.datasources.datasourcesets import DataSourceSet
+from enmapbox.gui.datasources.manager import DataSourceManager, DataSourceManagerPanelUI, DataSourceFactory, \
+    DataSourceManagerTreeView
+from enmapbox.gui.mimedata import extractMapLayers
 from enmapbox.testing import TestObjects, EnMAPBoxTestCase
 from enmapboxtestdata import classifierDumpPkl
+from qgis.PyQt import sip
+from qgis._core import QgsLayerTreeModel
+from qgis._gui import QgsLayerTreeView, QgisInterface
+from qgis.core import QgsProject, QgsMapLayer, QgsRasterLayer, QgsVectorLayer, QgsRasterRenderer, QgsRasterDataProvider
+from qgis.gui import QgsMapCanvas
 
 
 class DataSourceTests(EnMAPBoxTestCase):
@@ -220,6 +228,63 @@ class DataSourceTests(EnMAPBoxTestCase):
             dataSources = DataSourceFactory.create(source)
             self.assertIsInstance(dataSources, list)
             model.addDataSources(dataSources)
+
+        self.showGui(panel)
+
+    def test_DataSource_Drag_and_Drop(self):
+        from enmapbox.exampledata import enmap, landcover_polygons
+
+        model = DataSourceManager()
+        panel = DataSourceManagerPanelUI()
+        panel.connectDataSourceManager(model)
+
+        from qgis.utils import iface
+        self.assertIsInstance(iface, QgisInterface)
+        s = ""
+        tvE: DataSourceManagerTreeView = panel.dataSourceManagerTreeView()
+
+        tvQ: QgsLayerTreeView = iface.layerTreeView()
+        self.assertEqual(len(tvQ.model().sourceModel().rootGroup().findLayerIds()), 0)
+        iface.addRasterLayer(enmap)
+        iface.addVectorLayer(landcover_polygons)
+        self.assertEqual(len(tvQ.model().sourceModel().rootGroup().findLayerIds()), 2)
+
+        modelQ: QgsLayerTreeModel = tvQ.model().sourceModel()
+
+        indices = [modelQ.node2index(n) for n in modelQ.rootGroup().findLayers()]
+        mdQ = modelQ.mimeData(indices)
+        # uriList = QgsMimeDataUtils.decodeUriList(mdQ)
+        self.assertIsInstance(mdQ, QMimeData)
+
+        def collectDataSources() -> List[DataSource]:
+            results = []
+            for sourceSet in tvE.model().sourceModel().rootNode().childNodes():
+                self.assertIsInstance(sourceSet, DataSourceSet)
+                results.extend(sourceSet.dataSources())
+            return results
+
+        # 1. Drop layers from QGIS to Datasource panel
+        event = QDropEvent(QPointF(0, 0), Qt.CopyAction, mdQ, Qt.LeftButton, Qt.NoModifier, QEvent.Drop)
+        self.assertEqual(0, len(collectDataSources()))
+        tvE.dropEvent(event)
+        self.assertEqual(2, len(collectDataSources()))
+
+        # Clear QGIS
+        tvQ.layerTreeModel().rootGroup().clear()
+        self.assertEqual(0, len(iface.layerTreeView().layerTreeModel().rootGroup().findLayerIds()))
+
+        # drop data sources onto QGIS layer tree
+        modelE: DataSourceManager = tvE.model().sourceModel()
+        indices = modelE.nodes2indexes(modelE.dataSources())
+        mdE: QMimeData = modelE.mimeData(indices)
+        self.assertTrue('application/x-vnd.qgis.qgis.uri' in mdE.formats())
+
+        lyrs = extractMapLayers(mdE)
+        event = QDropEvent(QPointF(0, 0), Qt.CopyAction, mdE, Qt.LeftButton, Qt.NoModifier, QEvent.Drop)
+        tvQ.dropEvent(event)
+
+        self.assertEqual(2, len(tvQ.layerTreeModel().rootGroup().findLayerIds()))
+
         self.showGui(panel)
 
     def test_memory_provider(self):

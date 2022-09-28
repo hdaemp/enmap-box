@@ -121,12 +121,7 @@ class DataSourceManager(TreeModel):
         sourceList = [d.source() for d in dataSources]
 
         if len(dataSources) > 0:
-            mdf = fromDataSourceList(dataSources)
-            for f in mdf.formats():
-                mimeData.setData(f, mdf.data(f))
-
-            if len(mimeData.formats()) > 0:
-                return mimeData
+            return fromDataSourceList(dataSources)
 
         bandInfo = list()
         for node in bandNodes:
