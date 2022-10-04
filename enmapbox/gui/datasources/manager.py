@@ -32,7 +32,7 @@ from .metadata import RasterBandTreeNode
 from ..dataviews.docks import Dock
 from ..mapcanvas import MapCanvas
 from ..mimedata import MDF_URILIST, QGIS_URILIST_MIMETYPE, QGIS_LAYERTREEMODELDATA, extractMapLayers, \
-    fromDataSourceList, MDF_ENMAPBOX_SOURCE_WIDGET, setEnMAPBoxID
+    fromDataSourceList, setEnMAPBoxID
 from ...qgispluginsupport.qps.speclib.core import is_spectral_library
 from ...qgispluginsupport.qps.subdatasets import SubDatasetSelectionDialog
 

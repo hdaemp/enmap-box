@@ -33,19 +33,18 @@ from enmapbox.gui.dataviews.docks import Dock, DockArea, \
 from enmapbox.gui.mapcanvas import \
     MapCanvas, KEY_LAST_CLICKED
 from enmapbox.gui.mimedata import \
-    QGIS_LAYERTREEMODELDATA, MDF_ENMAPBOX_LAYERTREEMODELDATA, QGIS_URILIST_MIMETYPE, \
-    MDF_TEXT_HTML, MDF_URILIST, MDF_TEXT_PLAIN, QGIS_STYLE, \
+    QGIS_LAYERTREEMODELDATA, MDF_ENMAPBOX_LAYERTREEMODELDATA, MDF_TEXT_HTML, MDF_URILIST, MDF_TEXT_PLAIN, QGIS_STYLE, \
     extractMapLayers, containsMapLayers, MDF_ENMAPBOX_SOURCE_WIDGET, QGIS_LAYERTREE_LAYERDEFINITION, setEnMAPBoxID
 from enmapbox.gui.utils import enmapboxUiPath
 from enmapbox.qgispluginsupport.qps.layerproperties import pasteStyleFromClipboard, pasteStyleToClipboard
 from enmapbox.qgispluginsupport.qps.speclib.core import is_spectral_library, profile_field_list
 from enmapbox.qgispluginsupport.qps.utils import loadUi, findParent
 from qgis.PyQt.QtCore import Qt, QMimeData, QModelIndex, QObject, QTimer, pyqtSignal, QEvent, \
-    QSortFilterProxyModel, QCoreApplication
+    QSortFilterProxyModel
 from qgis.PyQt.QtGui import QIcon, QDragEnterEvent, QDragMoveEvent, QDropEvent, QDragLeaveEvent
 from qgis.PyQt.QtWidgets import QHeaderView, QMenu, QAbstractItemView, QApplication, QWidget, QToolButton, QAction
 from qgis.PyQt.QtXml import QDomDocument, QDomElement
-from qgis._core import QgsLayerDefinition
+from qgis.core import QgsLayerDefinition
 from qgis.core import Qgis, QgsCoordinateReferenceSystem, QgsMapLayer, QgsVectorLayer, QgsRasterLayer, \
     QgsProject, QgsReadWriteContext, \
     QgsLayerTreeLayer, QgsLayerTreeNode, QgsLayerTreeGroup, \
@@ -1217,7 +1216,6 @@ class DockManagerTreeModel(QgsLayerTreeModel):
         mimeSuper = super(DockManagerTreeModel, self).mimeData(indexes)
         setEnMAPBoxID(mimeSuper, self)
         return mimeSuper
-
 
     def parentNodesFromIndices(self, indices, nodeInstanceType=DockTreeNode):
         """

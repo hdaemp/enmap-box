@@ -1382,7 +1382,7 @@ class MapCanvas(QgsMapCanvas):
         # check mime types we can handle
         assert isinstance(event, QDragEnterEvent)
         if containsMapLayers(mimeData):
-            if event.dropAction() == Qt.MoveAction and not MDF_ENMAPBOX_SOURCE_WIDGET in mimeData.formats():
+            if event.dropAction() == Qt.MoveAction and MDF_ENMAPBOX_SOURCE_WIDGET not in mimeData.formats():
                 event.ignore()
             else:
                 event.accept()
