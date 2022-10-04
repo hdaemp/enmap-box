@@ -70,28 +70,25 @@ class EnMAPBoxPlugin(object):
 
         import enmapbox
         from qgis.utils import iface
-        if isinstance(iface, QgisInterface):
+        assert isinstance(iface, QgisInterface)
 
-            actionStartBox = QAction(enmapbox.icon(), 'EnMAP-Box', iface)
-            actionStartBox.triggered.connect(self.run)
-            actionAbout = QAction(QIcon(':/enmapbox/gui/ui/icons/metadata.svg'),
-                                  'About')
-            actionAbout.triggered.connect(self.showAboutDialog)
-            self.rasterMenuActions.append(actionStartBox)
-            self.rasterMenuActions.append(actionAbout)
-            self.pluginToolbarActions.append(actionStartBox)
+        actionStartBox = QAction(enmapbox.icon(), 'EnMAP-Box', iface)
+        actionStartBox.triggered.connect(self.run)
+        actionAbout = QAction(QIcon(':/enmapbox/gui/ui/icons/metadata.svg'),
+                              'About')
+        actionAbout.triggered.connect(self.showAboutDialog)
+        self.rasterMenuActions.append(actionStartBox)
+        self.rasterMenuActions.append(actionAbout)
+        self.pluginToolbarActions.append(actionStartBox)
 
-            for action in self.rasterMenuActions:
-                iface.addPluginToRasterMenu('EnMAP-Box', action)
+        for action in self.rasterMenuActions:
+            iface.addPluginToRasterMenu('EnMAP-Box', action)
 
-            for action in self.pluginToolbarActions:
-                iface.addToolBarIcon(action)
+        for action in self.pluginToolbarActions:
+            iface.addToolBarIcon(action)
 
-            # init stand-alone apps, that can operate in QGIS GUI without EnMAP-Box
-            self.initStandAloneAppGuis()
-
-        else:
-            print('EnMAPBoxPlugin.initGui() called without iface')
+        # init stand-alone apps, that can operate in QGIS GUI without EnMAP-Box
+        self.initStandAloneAppGuis()
 
     def showAboutDialog(self):
         from enmapbox.gui.about import AboutDialog
@@ -144,19 +141,55 @@ class EnMAPBoxPlugin(object):
         E.g. the GEE Time Series Explorer plugin.
         Those apps can now be used inside the EnMAP-Box GUI, but also in QGIS GUI as stand-alone.
         Therefore, we need to add toolbar icons.
-        Note that an app can't do this on it's own, because apps only get initialized on box startup.
+        Note that an app can't do this on its own, because apps only get initialized on box startup.
         """
 
+        self.initCurrentLocationMapTool()
         self.initGeeTimeseriesExplorerGui()
+        self.initProfileAnalyticsGui()
+
+    def initCurrentLocationMapTool(self):
+        """
+        This map tool can be used by all stand-alone apps, that need to select a location inside the QGIS map canvas.
+        """
+        from qgis.utils import iface
+        from geetimeseriesexplorerapp import MapTool
+
+        self.actionCurrentLocationMapTool = QAction(
+            QIcon(':/qps/ui/icons/select_location.svg'), 'Select Current Location'
+        )
+        self.actionCurrentLocationMapTool.setCheckable(True)
+        iface.addToolBarIcon(self.actionCurrentLocationMapTool)
+        self.actionCurrentLocationMapTool.toggled.connect(self.onCurrentLocationMapToolClicked)
+        self.currentLocationMapTool = MapTool(iface.mapCanvas(), self.actionCurrentLocationMapTool)
+
+        # add items to be removed when unload the plugin
+        self.pluginToolbarActions.append(self.actionCurrentLocationMapTool)
+
+    def onCurrentLocationMapToolClicked(self):
+        from qgis.utils import iface
+        if self.actionCurrentLocationMapTool.isChecked():
+            iface.mapCanvas().setMapTool(self.currentLocationMapTool)
+        else:
+            iface.mapCanvas().unsetMapTool(self.currentLocationMapTool)
 
     def initGeeTimeseriesExplorerGui(self):
         from qgis.utils import iface
         from geetimeseriesexplorerapp import GeeTimeseriesExplorerApp
 
-        self.geeTimeseriesExplorerApp = GeeTimeseriesExplorerApp(None, iface)
+        self.geeTimeseriesExplorerApp = GeeTimeseriesExplorerApp(None, iface, self.currentLocationMapTool)
 
         # add items to be removed when unload the plugin
         self.pluginToolbarActions.append(self.geeTimeseriesExplorerApp.actionToggleMainDock)
-        self.pluginToolbarActions.append(self.geeTimeseriesExplorerApp.actionCurrentLocationMapTool)
         self.dockWidgets.append(self.geeTimeseriesExplorerApp.mainDock)
         self.dockWidgets.append(self.geeTimeseriesExplorerApp.profileDock)
+
+    def initProfileAnalyticsGui(self):
+        from qgis.utils import iface
+        from profileanalyticsapp import ProfileAnalyticsApp
+
+        self.profileAnalyticsApp = ProfileAnalyticsApp(None, iface, self.currentLocationMapTool)
+
+        # add items to be removed when unload the plugin
+        self.pluginToolbarActions.append(self.profileAnalyticsApp.actionToggleDock)
+        self.dockWidgets.append(self.profileAnalyticsApp.dock)

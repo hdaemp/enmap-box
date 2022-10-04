@@ -31,7 +31,7 @@ import enmapbox.gui.datasources.manager
 import qgis.utils
 from enmapbox import messageLog, debugLog, DEBUG
 from enmapbox.algorithmprovider import EnMAPBoxProcessingProvider
-from enmapbox.gui import SpatialPoint, loadUi, SpatialExtent, file_search
+from enmapbox.qgispluginsupport.qps.utils import SpatialPoint, loadUi, SpatialExtent, file_search
 from enmapbox.gui.dataviews.dockmanager import DockManagerTreeModel, MapDockTreeNode
 from enmapbox.gui.dataviews.docks import SpectralLibraryDock, Dock, AttributeTableDock, MapDock
 from enmapbox.qgispluginsupport.qps.cursorlocationvalue import CursorLocationInfoDock
@@ -1062,7 +1062,7 @@ class EnMAPBox(QgisInterface, QObject, QgsExpressionContextGenerator, QgsProcess
 
         sources = [
             MapCanvasLayerProfileSource(mode=MapCanvasLayerProfileSource.MODE_FIRST_LAYER),
-            MapCanvasLayerProfileSource(mode=MapCanvasLayerProfileSource.MODE_BOTTOM_LAYER)
+            MapCanvasLayerProfileSource(mode=MapCanvasLayerProfileSource.MODE_LAST_LAYER)
         ]
 
         self.ui.spectralProfileSourcePanel.addSources(sources)
@@ -1578,10 +1578,14 @@ class EnMAPBox(QgisInterface, QObject, QgsExpressionContextGenerator, QgsProcess
 
         DIR_ENMAPBOX = pathlib.Path(enmapbox.DIR_ENMAPBOX)
         INTERNAL_APPS = DIR_ENMAPBOX / 'coreapps'
+        EO4Q_APPS = DIR_ENMAPBOX / 'eo4qapps'
         EXTERNAL_APPS = DIR_ENMAPBOX / 'apps'
+
         # load internal "core" apps
         if load_core_apps:
             self.applicationRegistry.addApplicationFolder(INTERNAL_APPS)
+            self.applicationRegistry.addApplicationFolder(EO4Q_APPS)
+
         # check for listing file
         p = INTERNAL_APPS / listingBasename
         if os.path.isfile(p):
@@ -1840,10 +1844,15 @@ class EnMAPBox(QgisInterface, QObject, QgsExpressionContextGenerator, QgsProcess
     def restoreProject(self):
         raise NotImplementedError()
 
-    def setCurrentLocation(self, spatialPoint: SpatialPoint, mapCanvas: QgsMapCanvas = None, emitSignal=True):
+    def setCurrentLocation(self,
+                           spatialPoint: SpatialPoint,
+                           mapCanvas: QgsMapCanvas = None,
+                           emitSignal: bool = True):
         """
         Sets the current "last selected" location, for which different properties might get derived,
         like cursor location values and SpectraProfiles.
+        :param emitSignal:
+        :type emitSignal:
         :param spatialPoint: SpatialPoint
         :param mapCanvas: QgsMapCanvas (optional), the canvas on which the location got selected
         """
