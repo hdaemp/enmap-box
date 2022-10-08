@@ -31,9 +31,10 @@ import sys
 import textwrap
 import typing
 import warnings
+import docutils.core
 from os.path import exists
 
-from qgis.core import QgsUserProfileManager, QgsUserProfile
+from qgis.core import QgsUserProfileManager, QgsUserProfile, QgsFileUtils
 
 site.addsitedir(pathlib.Path(__file__).parents[1])  # noqa
 
@@ -44,15 +45,31 @@ import enmapbox
 from enmapbox import DIR_REPO
 from enmapbox.qgispluginsupport.qps.make.deploy import QGISMetadataFileWriter, userProfileManager
 from enmapbox.qgispluginsupport.qps.utils import zipdir
-from qgis.core import QgsFileUtils
 
 # consider default Git location on Windows systems to avoid creating a Start-Up Script
-addDefaultGitLocation = True
-if addDefaultGitLocation:
-    potentialGitPath = r"C:\Program Files\Git\bin"
-    if exists(potentialGitPath):
-        os.environ["PATH"] = os.environ["PATH"] + os.pathsep + potentialGitPath
+try:
     import git
+except ModuleNotFoundError as ex:
+    # try to import after expanding PATH with known locations
+    potentialLocations = [r'C:\Program Files\Git\bin']
+    found = False
+    oldPath = os.environ['PATH']
+    for p in potentialLocations:
+        if exists(p):
+            os.environ['PATH'] = oldPath + os.pathsep + p
+            sys.path.append(p)
+            try:
+                import git
+
+                found = True
+                break
+            except ModuleNotFoundError:
+                sys.path.remove(p)
+    if found:
+        warnings.warn(f'Git executable was not available in PATH! Found it in {p}')
+    else:
+        os.environ['PATH'] = oldPath  # avoid side-effects!
+        raise ex
 
 DIR_REPO = pathlib.Path(DIR_REPO)
 
@@ -310,7 +327,6 @@ def createCHANGELOG(dirPlugin):
     os.makedirs(os.path.dirname(pathCL), exist_ok=True)
     assert os.path.isfile(pathMD)
     #    import sphinx.transforms
-    import docutils.core
 
     overrides = {'stylesheet': None,
                  'embed_stylesheet': False,
@@ -419,7 +435,7 @@ if __name__ == "__main__":
             Processing algo documentation up-to-date (run create_processing_rst).
             Run weblink checker (in doc folder make linkcheck).
             Check if box runs without optional dependencies (see tests/non-blocking-dependencies/readme.txt).
-            Version number increased? (enmapbox/__init__.py -> __version__)
+            Version number increased? (see .plugin.ini version = 3.x.y)
             QGIS Min-Version? (enmapbox/__init__.py -> MIN_VERSION_QGIS)
             ZIP containing branch (i.e. master) information (GIT installed)?
             Install ZIP and quick-test under the latest supported QGIS versions and OS, e.g.:

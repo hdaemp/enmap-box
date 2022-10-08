@@ -8,6 +8,7 @@ find . -name "*.pyc" -exec rm -f {} \;
 export PYTHONPATH="${PYTHONPATH}:$(pwd):/usr/share/qgis/python/plugins"
 # python3 scripts/setup_repository.py
 
+python3 -m unittest tests/src/core/test_exampledata.py
 python3 -m unittest tests/src/core/test_applications.py
 python3 -m unittest tests/src/core/test_crosshair.py
 python3 -m unittest tests/src/core/test_cursorlocationsvalues.py
