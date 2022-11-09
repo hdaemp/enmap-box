@@ -223,7 +223,7 @@ class DockTreeNode(LayerTreeNode):
         """
         Returns the map layer related to this dock
         """
-        raise NotImplementedError()
+        return [n.layer() for n in self.findLayers()]
 
 
 class TextDockTreeNode(DockTreeNode):

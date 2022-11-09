@@ -21,6 +21,7 @@ import site
 import unittest
 
 from enmapbox import DIR_REPO
+from enmapbox.qgispluginsupport.qps.testing import QgisMockup
 from enmapbox.testing import TestCase
 from qgis.utils import iface
 
@@ -48,10 +49,20 @@ class TestEnMAPBoxPlugin(TestCase):
         self.assertTrue(parser.get('general', 'email') != '')
         self.assertTrue(parser.get('general', 'repository') != '')
 
+    def test_addToIFace(self):
+
+        from qgis.utils import iface
+        from enmapbox.enmapboxplugin import EnMAPBoxPlugin
+        self.assertIsInstance(iface, QgisMockup)
+        plugin = EnMAPBoxPlugin()
+        self.assertIsInstance(plugin, EnMAPBoxPlugin)
+        plugin.initGui()
+        self.showGui(iface.ui)
+
     def test_loadplugin(self):
         from enmapbox.enmapboxplugin import EnMAPBoxPlugin
 
-        plugin = EnMAPBoxPlugin(iface)
+        plugin = EnMAPBoxPlugin()
         self.assertIsInstance(plugin, EnMAPBoxPlugin)
         plugin.initGui()
         plugin.unload()
