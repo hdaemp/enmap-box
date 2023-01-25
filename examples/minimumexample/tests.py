@@ -20,8 +20,7 @@
 """
 
 from unittest import TestCase
-
-from enmapbox import EnMAPBoxApplication
+from enmapbox.gui.applications import EnMAPBoxApplication
 from enmapbox.testing import initQgisApplication
 from minimumexample.exampleapp import exampleAlgorithm, ExampleProcessingAlgorithm, ExampleApplicationGUI, \
     ExampleApplication
@@ -83,7 +82,7 @@ class TestExampleEnMAPBoxApp(TestCase):
         """
         Finally, test if your application can be added into the EnMAP-Box
         """
-        from enmapbox import EnMAPBox
+        from enmapbox.gui.enmapboxgui import EnMAPBox
         enmapBox = EnMAPBox(None)
         self.assertIsInstance(enmapBox, EnMAPBox)
 

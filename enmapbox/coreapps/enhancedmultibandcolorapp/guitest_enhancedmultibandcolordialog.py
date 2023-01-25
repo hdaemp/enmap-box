@@ -1,5 +1,7 @@
 from enhancedmultibandcolorapp.enhancedmultibandcolordialog import EnhancedMultiBandColorDialog
-from enmapbox import EnMAPBox, initAll
+from enmapbox import initall
+from enmapbox.gui.enmapboxgui import EnMAPBox
+
 from enmapbox.testing import start_app
 from qgis.core import QgsRasterLayer
 

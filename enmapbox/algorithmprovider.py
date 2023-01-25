@@ -94,7 +94,8 @@ class EnMAPBoxProcessingProvider(QgsProcessingProvider):
         Add file created  by hubflow to the EnMAP-Box
         :return:
         """
-        from enmapbox import EnMAPBox, debugLog
+        from enmapbox.gui.enmapboxgui import EnMAPBox
+        from enmapbox import debugLog
         debugLog(f'onHubFlowFileCreated: file: {file}')
         if EnMAPBox is not None:
             emb = EnMAPBox.instance()

@@ -1,6 +1,8 @@
 from osgeo import gdal
 
-from enmapbox import EnMAPBox, initAll
+from enmapbox import initall
+from enmapbox.gui.enmapboxgui import EnMAPBox
+
 from enmapbox.exampledata import enmap
 from enmapbox.qgispluginsupport.qps.qgsrasterlayerproperties import QgsRasterLayerSpectralProperties
 from enmapbox.testing import start_app

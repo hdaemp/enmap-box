@@ -1,4 +1,6 @@
-from enmapbox import EnMAPBox, initAll
+from enmapbox import initall
+from enmapbox.gui.enmapboxgui import EnMAPBox
+
 from enmapbox.gui.widgets.multiplerasterbandselectionwidget.multiplerasterbandselectionwidget import \
     MultipleRasterBandSelectionWidget
 from enmapbox.testing import start_app

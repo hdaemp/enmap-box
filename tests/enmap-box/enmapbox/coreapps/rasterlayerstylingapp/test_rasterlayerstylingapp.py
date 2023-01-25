@@ -2,7 +2,9 @@ from os.path import basename
 
 import numpy as np
 
-from enmapbox import EnMAPBox, initAll
+from enmapbox import initall
+from enmapbox.gui.enmapboxgui import EnMAPBox
+
 from enmapbox.testing import start_app
 from enmapboxprocessing.driver import Driver
 from enmapboxprocessing.rasterreader import RasterReader

@@ -15,8 +15,9 @@ import urllib.request
 import pandas as pd
 from xlsxwriter.workbook import Workbook
 
-from enmapbox import DIR_REPO_TMP, EnMAPBox, EnMAPBoxApplication
-from enmapbox import initAll
+from enmapbox import DIR_REPO_TMP, initAll
+from enmapbox.gui.enmapboxgui import EnMAPBox
+from enmapbox.gui.applications import EnMAPBoxApplication
 from enmapbox.algorithmprovider import EnMAPBoxProcessingProvider
 from enmapbox.gui.applications import ApplicationWrapper
 from enmapbox.testing import start_app, stop_app

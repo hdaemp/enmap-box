@@ -1,4 +1,6 @@
-from enmapbox import EnMAPBox, initAll
+from enmapbox import initall
+from enmapbox.gui.enmapboxgui import EnMAPBox
+
 from enmapbox.gui.widgets.multiplemaplayerselectionwidget.multiplemaplayerselectionwidget import \
     MultipleMapLayerSelectionWidget
 from enmapbox.testing import start_app

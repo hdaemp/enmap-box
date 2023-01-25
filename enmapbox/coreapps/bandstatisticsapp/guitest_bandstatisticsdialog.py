@@ -1,7 +1,7 @@
 from qgis.core import QgsRasterLayer
 
 from bandstatisticsapp.bandstatisticsdialog import BandStatisticsDialog
-from enmapbox import EnMAPBox, initAll
+from enmapbox.gui.enmapboxgui import EnMAPBox
 from enmapbox.exampledata import enmap
 from enmapbox.testing import start_app
 

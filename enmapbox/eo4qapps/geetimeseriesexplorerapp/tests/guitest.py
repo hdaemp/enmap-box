@@ -1,5 +1,7 @@
 import enmapbox.qgispluginsupport.qps.pyqtgraph.pyqtgraph.examples
-from enmapbox import EnMAPBox, initAll
+from enmapbox import initall
+from enmapbox.gui.enmapboxgui import EnMAPBox
+
 from enmapbox.testing import start_app
 from geetimeseriesexplorerapp import GeeTimeseriesExplorerApp
 from qgis.core import QgsVectorLayer
